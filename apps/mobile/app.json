@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "우리의 냉장고",
+    "slug": "our-fridge",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "ourfridge",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ourfridge.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.ourfridge.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-asset"
+    ]
+  }
+}
