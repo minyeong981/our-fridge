@@ -1,0 +1,17 @@
+{
+  "name": "@our-fridge/api",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@our-fridge/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.43.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
