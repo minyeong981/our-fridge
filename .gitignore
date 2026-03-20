@@ -150,3 +150,6 @@ apps/mobile/.env
 
 # pnpm
 .pnpm-store/
+
+# docs
+docs/
