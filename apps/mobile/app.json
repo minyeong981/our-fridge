@@ -20,8 +20,7 @@
       "package": "com.ourfridge.app"
     },
     "plugins": [
-      "expo-router",
-      "expo-dev-client"
+      "expo-router"
     ]
   }
 }

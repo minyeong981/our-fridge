@@ -12,7 +12,9 @@
     "lint": "pnpm -r lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
-    "db:push": "supabase db execute --file supabase/schema.sql --project-ref exkzgbudslvmxblxwzmb"
+    "db:push": "supabase db execute --file supabase/schema.sql --project-ref exkzgbudslvmxblxwzmb",
+    "android": "pnpm --filter mobile android",
+    "ios": "pnpm --filter mobile ios"
   },
   "devDependencies": {
     "prettier": "^3.3.0",
@@ -23,15 +25,12 @@
     "overrides": {
       "react": "19.1.0",
       "react-dom": "19.1.0"
-    },
-    "patchedDependencies": {
-      "expo-dev-menu@6.0.25": "patches/expo-dev-menu@6.0.25.patch",
-      "expo-dev-launcher@5.0.35": "patches/expo-dev-launcher@5.0.35.patch"
     }
   },
   "engines": {
     "node": ">=18",
     "pnpm": ">=9"
   },
-  "packageManager": "pnpm@10.29.1+sha512.48dae233635a645768a3028d19545cacc1688639eeb1f3734e42d6d6b971afbf22aa1ac9af52a173d9c3a20c15857cfa400f19994d79a2f626fcc73fccda9bbc"
+  "packageManager": "pnpm@10.29.1+sha512.48dae233635a645768a3028d19545cacc1688639eeb1f3734e42d6d6b971afbf22aa1ac9af52a173d9c3a20c15857cfa400f19994d79a2f626fcc73fccda9bbc",
+  "version": "1.0.0"
 }
