@@ -1,3 +1,20 @@
+diff --git a/android/build.gradle b/android/build.gradle
+index a715f0d1d05f16ded8209f9716d3d19922f1e6c3..2a90f366aaebafc2abf7f4f6c2a46332f3a6bd91 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -73,8 +73,10 @@ task copyAssets(type: Copy) {
+ }
+ 
+ project.afterEvaluate {
+-  packageDebugAssets.dependsOn copyAssets
+-  packageReleaseWithDevMenuAssets.dependsOn copyAssets
++  tasks.findByName("packageDebugAssets")?.dependsOn(copyAssets)
++  tasks.findByName("mergeDebugAssets")?.dependsOn(copyAssets)
++  tasks.findByName("packageReleaseWithDevMenuAssets")?.dependsOn(copyAssets)
++  tasks.findByName("mergeReleaseWithDevMenuAssets")?.dependsOn(copyAssets)
+ }
+ 
+ repositories {
 diff --git a/android/src/debug/java/expo/modules/devmenu/DevMenuDevSettings.kt b/android/src/debug/java/expo/modules/devmenu/DevMenuDevSettings.kt
 index fa61d87fdf9f4f73170715bb45e427d4c9bc3a07..68534ace467fce3546eb28a0a4e9bc26344f11c6 100644
 --- a/android/src/debug/java/expo/modules/devmenu/DevMenuDevSettings.kt
