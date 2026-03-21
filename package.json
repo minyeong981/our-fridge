@@ -4,6 +4,7 @@
   "scripts": {
     "web": "pnpm --filter web dev",
     "mobile": "pnpm --filter mobile start",
+    "mobile:android": "pnpm --filter mobile android",
     "build:web": "pnpm --filter web build",
     "build:api": "pnpm --filter @our-fridge/api build",
     "build:shared": "pnpm --filter @our-fridge/shared build",
@@ -22,6 +23,10 @@
     "overrides": {
       "react": "19.1.0",
       "react-dom": "19.1.0"
+    },
+    "patchedDependencies": {
+      "expo-dev-menu@6.0.25": "patches/expo-dev-menu@6.0.25.patch",
+      "expo-dev-launcher@5.0.35": "patches/expo-dev-launcher@5.0.35.patch"
     }
   },
   "engines": {

@@ -1,0 +1,153 @@
+diff --git a/android/src/debug/java/expo/modules/devmenu/DevMenuDevSettings.kt b/android/src/debug/java/expo/modules/devmenu/DevMenuDevSettings.kt
+index fa61d87fdf9f4f73170715bb45e427d4c9bc3a07..68534ace467fce3546eb28a0a4e9bc26344f11c6 100644
+--- a/android/src/debug/java/expo/modules/devmenu/DevMenuDevSettings.kt
++++ b/android/src/debug/java/expo/modules/devmenu/DevMenuDevSettings.kt
+@@ -9,15 +9,13 @@ object DevMenuDevSettings {
+     val devDelegate = DevMenuDevToolsDelegate(DevMenuManager, reactHost)
+     val devSettings = devDelegate.devSettings
+ 
+-    val jsBundleURL = reactHost.devSupportManager?.jSBundleURLForRemoteDebugging ?: ""
+-
+     if (devSettings != null) {
+       return Bundle().apply {
+-        putBoolean("isDebuggingRemotely", devSettings.isRemoteJSDebugEnabled)
++        putBoolean("isDebuggingRemotely", false)
+         putBoolean("isElementInspectorShown", devSettings.isElementInspectorEnabled)
+         putBoolean("isHotLoadingEnabled", devDelegate.devInternalSettings?.isHotModuleReplacementEnabled ?: false)
+         putBoolean("isPerfMonitorShown", devSettings.isFpsDebugEnabled)
+-        putBoolean("isRemoteDebuggingAvailable", jsBundleURL.isNotEmpty())
++        putBoolean("isRemoteDebuggingAvailable", false)
+         putBoolean("isElementInspectorAvailable", devSettings.isJSDevModeEnabled)
+         putBoolean("isHotLoadingAvailable", devSettings.isJSDevModeEnabled)
+         putBoolean("isPerfMonitorAvailable", devSettings.isJSDevModeEnabled)
+diff --git a/android/src/debug/java/expo/modules/devmenu/DevMenuReactHost.kt b/android/src/debug/java/expo/modules/devmenu/DevMenuReactHost.kt
+index 97fee17ffa34f3f4b23de36cb5c0a55e5b6f32af..0c5458918d20e94d9155a8d69b716ea0b521ceba 100644
+--- a/android/src/debug/java/expo/modules/devmenu/DevMenuReactHost.kt
++++ b/android/src/debug/java/expo/modules/devmenu/DevMenuReactHost.kt
+@@ -3,7 +3,6 @@ package expo.modules.devmenu
+ import android.app.Application
+ import android.content.Context
+ import android.util.Log
+-import com.facebook.react.JSEngineResolutionAlgorithm
+ import com.facebook.react.ReactHost
+ import com.facebook.react.ReactPackage
+ import com.facebook.react.bridge.JSBundleLoader
+@@ -14,11 +13,9 @@ import com.facebook.react.defaults.DefaultTurboModuleManagerDelegate
+ import com.facebook.react.devsupport.DevMenuReactSettings
+ import com.facebook.react.devsupport.DevServerHelper
+ import com.facebook.react.fabric.ComponentFactory
+-import com.facebook.react.runtime.JSCInstance
+ import com.facebook.react.runtime.ReactHostImpl
+ import com.facebook.react.runtime.hermes.HermesInstance
+ import com.facebook.react.shell.MainReactPackage
+-import com.facebook.soloader.SoLoader
+ import devmenu.com.th3rdwave.safeareacontext.SafeAreaProviderManager
+ import expo.modules.adapters.react.ModuleRegistryAdapter
+ import expo.modules.adapters.react.ReactModuleRegistryProvider
+@@ -36,12 +33,7 @@ object DevMenuReactHost {
+     val jsBundleAssetPath = "EXDevMenuApp.android.js"
+     val jsBundleLoader =
+       JSBundleLoader.createAssetLoader(application, "assets://$jsBundleAssetPath", true)
+-    val jsResolutionAlgorithm = createJSEngineResolutionAlgorithm(application)
+-    val jsRuntimeFactory = if (jsResolutionAlgorithm == JSEngineResolutionAlgorithm.JSC) {
+-      JSCInstance()
+-    } else {
+-      HermesInstance()
+-    }
++    val jsRuntimeFactory = HermesInstance()
+     val jsMainModuleName = "index"
+     val defaultReactHostDelegate =
+       DefaultReactHostDelegate(
+@@ -94,14 +86,6 @@ object DevMenuReactHost {
+     return packages
+   }
+ 
+-  private fun createJSEngineResolutionAlgorithm(application: Application): JSEngineResolutionAlgorithm {
+-    SoLoader.init(application.applicationContext, /* native exopackage */ false)
+-    if (SoLoader.getLibraryPath("libjsc.so") != null) {
+-      return JSEngineResolutionAlgorithm.JSC
+-    }
+-    return JSEngineResolutionAlgorithm.HERMES
+-  }
+-
+   /**
+    * To use a different packager url, we need to replace internal RN objects.
+    */
+diff --git a/android/src/main/java/com/facebook/react/devsupport/DevMenuReactSettings.kt b/android/src/main/java/com/facebook/react/devsupport/DevMenuReactSettings.kt
+index 3fc150012545ed3b72da6326213c83306e4bfe8f..aae7976f90c172925e0be18166490f5b81845bdb 100644
+--- a/android/src/main/java/com/facebook/react/devsupport/DevMenuReactSettings.kt
++++ b/android/src/main/java/com/facebook/react/devsupport/DevMenuReactSettings.kt
+@@ -36,12 +36,6 @@ internal class DevMenuInternalSettingsWrapper(private val devSettings: Developer
+       devSettings.isHotModuleReplacementEnabled = value
+     }
+ 
+-  var isRemoteJSDebugEnabled: Boolean
+-    get() = devSettings.isRemoteJSDebugEnabled
+-    set(value) {
+-      devSettings.isRemoteJSDebugEnabled = value
+-    }
+-
+   var isJSDevModeEnabled: Boolean
+     get() = devSettings.isJSDevModeEnabled
+     set(value) {
+diff --git a/android/src/main/java/com/facebook/react/devsupport/DevMenuSettingsBase.kt b/android/src/main/java/com/facebook/react/devsupport/DevMenuSettingsBase.kt
+index d9f6244018a07b53ed313bd7d0b19e5b1e43e804..8f7a0021530242c58b91bc3f4ca895539a4714d0 100644
+--- a/android/src/main/java/com/facebook/react/devsupport/DevMenuSettingsBase.kt
++++ b/android/src/main/java/com/facebook/react/devsupport/DevMenuSettingsBase.kt
+@@ -47,15 +47,6 @@ abstract class DevMenuSettingsBase(
+ 
+   override var isDeviceDebugEnabled: Boolean = ReactBuildConfig.DEBUG
+ 
+-  override var isRemoteJSDebugEnabled: Boolean
+-    get() = mPreferences.getBoolean("remote_js_debug", false)
+-    set(remoteJSDebugEnabled) {
+-      mPreferences.edit().putBoolean("remote_js_debug", remoteJSDebugEnabled).apply()
+-    }
+-
+-  override var isStartSamplingProfilerOnInit: Boolean =
+-    mPreferences.getBoolean("start_sampling_profiler_on_init", false)
+-
+   override fun addMenuItem(title: String) {
+   }
+ 
+diff --git a/android/src/main/java/expo/modules/devmenu/devtools/DevMenuDevToolsDelegate.kt b/android/src/main/java/expo/modules/devmenu/devtools/DevMenuDevToolsDelegate.kt
+index f755d90b6ebc44bc409bf1b9bae460c13576fcb1..5b8ec60628e0c4425f5e01668f09efcfb327fc30 100644
+--- a/android/src/main/java/expo/modules/devmenu/devtools/DevMenuDevToolsDelegate.kt
++++ b/android/src/main/java/expo/modules/devmenu/devtools/DevMenuDevToolsDelegate.kt
+@@ -52,14 +52,8 @@ class DevMenuDevToolsDelegate(
+     reactDevManager?.toggleElementInspector()
+   }
+ 
+-  fun toggleRemoteDebugging() = runWithDevSupportEnabled {
+-    val reactDevManager = reactDevManager ?: return
+-    val devSettings = devSettings ?: return
+-    manager.closeMenu()
+-    UiThreadUtil.runOnUiThread {
+-      devSettings.isRemoteJSDebugEnabled = !devSettings.isRemoteJSDebugEnabled
+-      reactDevManager.handleReloadJS()
+-    }
++  fun toggleRemoteDebugging() {
++    // Remote JS debugging is not supported in React Native 0.79+
+   }
+ 
+   fun togglePerformanceMonitor(context: Context) {
+diff --git a/android/src/main/java/expo/modules/devmenu/react/DevMenuHostHelper.kt b/android/src/main/java/expo/modules/devmenu/react/DevMenuHostHelper.kt
+index f8a960e157f3b12bb3a80d22fda7e3542ae5583f..771c80f962a36e614dabb788d9cd7690dd7641b9 100644
+--- a/android/src/main/java/expo/modules/devmenu/react/DevMenuHostHelper.kt
++++ b/android/src/main/java/expo/modules/devmenu/react/DevMenuHostHelper.kt
+@@ -3,15 +3,8 @@ package expo.modules.devmenu.react
+ import android.app.Application
+ import com.facebook.hermes.reactexecutor.HermesExecutorFactory
+ import com.facebook.react.bridge.JavaScriptExecutorFactory
+-import com.facebook.react.jscexecutor.JSCExecutorFactory
+-import com.facebook.react.modules.systeminfo.AndroidInfoHelpers
+-import com.facebook.soloader.SoLoader
+ 
+ fun createNonDebuggableJavaScriptExecutorFactory(application: Application): JavaScriptExecutorFactory {
+-  SoLoader.init(application.applicationContext, /* native exopackage */ false)
+-  if (SoLoader.getLibraryPath("libjsc.so") != null) {
+-    return JSCExecutorFactory(application.packageName, AndroidInfoHelpers.getFriendlyDeviceName())
+-  }
+   return HermesExecutorFactory().also {
+     try {
+       HermesExecutorFactory::class.java
