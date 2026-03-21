@@ -5,7 +5,7 @@ import { getItemsByFridge } from '@our-fridge/api'
 import type { Item } from '@our-fridge/shared'
 import { formatDate, isExpired, isExpiringSoon } from '@our-fridge/shared'
 
-const FRIDGE_ID = 'your-fridge-id' // 실제 fridge ID로 교체
+const FRIDGE_ID = '36fadfe5-07bf-40af-ae77-f68666aee42f' // 실제 fridge ID로 교체
 
 function getExpireColor(date: string) {
   if (isExpired(date)) return 'text-red-500'
