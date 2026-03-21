@@ -144,6 +144,11 @@ apps/mobile/.env
 
 # Claude Code
 .claude/
+.mcp.json
+CLAUDE.md
+AGENTS.md
+MEMORY.md
+orchestration.md
 
 # Editor
 .vscode/
@@ -153,3 +158,6 @@ apps/mobile/.env
 
 # docs
 docs/
+
+# .gitignore
+.gitignore
