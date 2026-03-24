@@ -1,8 +1,7 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { WebView, WebViewNavigation } from 'react-native-webview'
-import { useEffect } from 'react'
 
 // Android 에뮬레이터: 10.0.2.2 | iOS 시뮬레이터·실기기: 호스트 IP
 const WEB_URL = 'http://10.0.2.2:3000'
@@ -33,6 +32,7 @@ export default function WebViewScreen() {
         source={{ uri: WEB_URL }}
         style={styles.webview}
         onNavigationStateChange={handleNavigationStateChange}
+        userAgent="Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
         startInLoadingState
         renderLoading={() => (
           <View style={styles.loading}>
