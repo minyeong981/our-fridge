@@ -5,22 +5,41 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "ourfridge",
+    "icon": "./assets/images/our-fridge-icon.png",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
+    "splash": {
+      "image": "./assets/images/our-fridge-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.ourfridge.app"
     },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/images/our-fridge-icon.png",
+        "monochromeImage": "./assets/images/our-fridge-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.ourfridge.app"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/our-fridge-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "image": "./assets/images/our-fridge-icon.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#1C1C1E"
+          }
+        }
+      ]
     ]
   }
 }
