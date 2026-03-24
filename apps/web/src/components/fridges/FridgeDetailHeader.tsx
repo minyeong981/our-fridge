@@ -1,7 +1,8 @@
 'use client'
 
-import { Bell, Menu } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { useFridgeDetail } from '@/contexts/FridgeDetailContext'
+import { NotificationBell } from '@/components/layout/NotificationBell'
 
 export function FridgeDetailHeader() {
   const { fridgeName, fridgeLocation, setIsSidePanelOpen } = useFridgeDetail()
@@ -13,12 +14,9 @@ export function FridgeDetailHeader() {
         {fridgeLocation && <p className="text-xs text-neutral-400">{fridgeLocation}</p>}
       </div>
       <div className="flex items-center gap-1 shrink-0">
-        <button
-          aria-label="알림"
-          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 transition-colors"
-        >
-          <Bell size={20} className="text-neutral-500" />
-        </button>
+        <div onClick={() => setIsSidePanelOpen(false)}>
+          <NotificationBell />
+        </div>
         <button
           aria-label="메뉴"
           onClick={() => setIsSidePanelOpen((v) => !v)}

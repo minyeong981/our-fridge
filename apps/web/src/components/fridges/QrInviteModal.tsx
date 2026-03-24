@@ -92,11 +92,6 @@ export function QrInviteModal({ fridgeName, inviteUrl, onClose }: QrInviteModalP
             </div>
           </div>
 
-          {/* URL */}
-          <p className="text-center text-[10px] text-neutral-400 px-6 pb-3 truncate">
-            {inviteUrl}
-          </p>
-
           {/* 다운로드 버튼 */}
           <div className="px-5 pb-6">
             <button
