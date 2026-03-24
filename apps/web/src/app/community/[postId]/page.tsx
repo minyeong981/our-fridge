@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Heart, MessageCircle, Send, CornerDownRight } from 'lucide-react'
+import { Heart, MessageCircle, Send, CornerDownRight, MoreVertical } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { type PostCategory, CATEGORY_STYLE } from '@/lib/constants'
 import { ContextMenu } from '@/components/ui/ContextMenu'
@@ -29,7 +29,6 @@ interface Comment {
   isLiked: boolean
   replies: Reply[]
 }
-
 
 const MOCK_POST = {
   id: 'p1',
@@ -207,8 +206,15 @@ export default function CommunityPostDetailPage() {
     setCommentText('')
   }
 
-
-  function EditBox({ onSave, onCancel }: { onSave: () => void; onCancel: () => void }) {
+  function EditBox({
+    onSave,
+    onCancel,
+    leftActions,
+  }: {
+    onSave: () => void
+    onCancel: () => void
+    leftActions?: React.ReactNode
+  }) {
     return (
       <div className="mt-1">
         <textarea
@@ -218,17 +224,20 @@ export default function CommunityPostDetailPage() {
           rows={2}
           className="w-full text-sm text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 outline-none resize-none leading-relaxed"
         />
-        <div className="flex justify-end gap-3 mt-1.5">
-          <button onClick={onCancel} className="text-xs text-neutral-400 font-medium">
-            취소
-          </button>
-          <button
-            onClick={onSave}
-            disabled={!editText.trim()}
-            className="text-xs font-bold text-primary disabled:text-neutral-300"
-          >
-            완료
-          </button>
+        <div className="flex items-center justify-between mt-1.5">
+          <div>{leftActions}</div>
+          <div className="flex gap-3">
+            <button onClick={onCancel} className="text-xs text-neutral-400 font-medium">
+              취소
+            </button>
+            <button
+              onClick={onSave}
+              disabled={!editText.trim()}
+              className="text-xs font-bold text-primary disabled:text-neutral-300"
+            >
+              완료
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -250,39 +259,39 @@ export default function CommunityPostDetailPage() {
               {MOCK_POST.category}
             </span>
             {MOCK_POST.author === ME.name && (
-            <div className="ml-auto relative">
-              <button
-                onClick={() => setIsPostMenuOpen((v) => !v)}
-                className="p-1 rounded hover:bg-neutral-100 transition-colors"
-              >
-                <MoreVertical size={16} className="text-neutral-400" />
-              </button>
-              {isPostMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsPostMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-neutral-100 overflow-hidden z-50 w-28">
-                    <button
-                      onClick={() => {
-                        setIsPostMenuOpen(false)
-                        router.push(`/community/write?postId=${postId}`)
-                      }}
-                      className="w-full text-left px-4 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
-                    >
-                      수정하기
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsPostMenuOpen(false)
-                        router.back()
-                      }}
-                      className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50"
-                    >
-                      삭제하기
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+              <div className="ml-auto relative">
+                <button
+                  onClick={() => setIsPostMenuOpen((v) => !v)}
+                  className="p-1 rounded hover:bg-neutral-100 transition-colors"
+                >
+                  <MoreVertical size={16} className="text-neutral-400" />
+                </button>
+                {isPostMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsPostMenuOpen(false)} />
+                    <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-neutral-100 overflow-hidden z-50 w-28">
+                      <button
+                        onClick={() => {
+                          setIsPostMenuOpen(false)
+                          router.push(`/community/write?postId=${postId}`)
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+                      >
+                        수정하기
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsPostMenuOpen(false)
+                          router.back()
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50"
+                      >
+                        삭제하기
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             )}
           </div>
 
@@ -375,7 +384,13 @@ export default function CommunityPostDetailPage() {
                           openMenuId={openMenuId}
                           onOpenChange={setOpenMenuId}
                           items={[
-                            { label: '수정하기', onClick: () => { setEditingId(`c-${c.id}`); setEditText(c.content) } },
+                            {
+                              label: '수정하기',
+                              onClick: () => {
+                                setEditingId(`c-${c.id}`)
+                                setEditText(c.content)
+                              },
+                            },
                             { label: '삭제하기', onClick: () => deleteComment(c.id), danger: true },
                           ]}
                         />
@@ -390,39 +405,52 @@ export default function CommunityPostDetailPage() {
                         setEditingId(null)
                         setEditText('')
                       }}
+                      leftActions={
+                        <button
+                          onClick={() => toggleCommentLike(c.id)}
+                          className="flex items-center gap-1"
+                        >
+                          <Heart
+                            size={12}
+                            className={cn(
+                              'transition-colors',
+                              c.isLiked ? 'fill-red-400 text-red-400' : 'text-neutral-300',
+                            )}
+                          />
+                          <span className={cn('text-[11px]', c.isLiked ? 'text-red-400' : 'text-neutral-400')}>
+                            {c.likes}
+                          </span>
+                        </button>
+                      }
                     />
                   ) : (
-                    <p className="text-sm text-neutral-700 leading-relaxed">{c.content}</p>
+                    <>
+                      <p className="text-sm text-neutral-700 leading-relaxed">{c.content}</p>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <button
+                          onClick={() => startReply(c.id, c.author)}
+                          className="text-[11px] text-neutral-400 hover:text-neutral-600 transition-colors"
+                        >
+                          답글 달기
+                        </button>
+                        <button
+                          onClick={() => toggleCommentLike(c.id)}
+                          className="flex items-center gap-1"
+                        >
+                          <Heart
+                            size={12}
+                            className={cn(
+                              'transition-colors',
+                              c.isLiked ? 'fill-red-400 text-red-400' : 'text-neutral-300',
+                            )}
+                          />
+                          <span className={cn('text-[11px]', c.isLiked ? 'text-red-400' : 'text-neutral-400')}>
+                            {c.likes}
+                          </span>
+                        </button>
+                      </div>
+                    </>
                   )}
-
-                  <div className="flex items-center gap-3 mt-1.5">
-                    <button
-                      onClick={() => startReply(c.id, c.author)}
-                      className="text-[11px] text-neutral-400 hover:text-neutral-600 transition-colors"
-                    >
-                      답글 달기
-                    </button>
-                    <button
-                      onClick={() => toggleCommentLike(c.id)}
-                      className="flex items-center gap-1"
-                    >
-                      <Heart
-                        size={12}
-                        className={cn(
-                          'transition-colors',
-                          c.isLiked ? 'fill-red-400 text-red-400' : 'text-neutral-300',
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          'text-[11px]',
-                          c.isLiked ? 'text-red-400' : 'text-neutral-400',
-                        )}
-                      >
-                        {c.likes}
-                      </span>
-                    </button>
-                  </div>
                 </div>
               </div>
 
@@ -452,8 +480,18 @@ export default function CommunityPostDetailPage() {
                             openMenuId={openMenuId}
                             onOpenChange={setOpenMenuId}
                             items={[
-                              { label: '수정하기', onClick: () => { setEditingId(`r-${c.id}-${r.id}`); setEditText(r.content) } },
-                              { label: '삭제하기', onClick: () => deleteReply(c.id, r.id), danger: true },
+                              {
+                                label: '수정하기',
+                                onClick: () => {
+                                  setEditingId(`r-${c.id}-${r.id}`)
+                                  setEditText(r.content)
+                                },
+                              },
+                              {
+                                label: '삭제하기',
+                                onClick: () => deleteReply(c.id, r.id),
+                                danger: true,
+                              },
                             ]}
                           />
                         </div>
@@ -467,30 +505,44 @@ export default function CommunityPostDetailPage() {
                           setEditingId(null)
                           setEditText('')
                         }}
+                        leftActions={
+                          <button
+                            onClick={() => toggleReplyLike(c.id, r.id)}
+                            className="flex items-center gap-1"
+                          >
+                            <Heart
+                              size={12}
+                              className={cn(
+                                'transition-colors',
+                                r.isLiked ? 'fill-red-400 text-red-400' : 'text-neutral-300',
+                              )}
+                            />
+                            <span className={cn('text-[11px]', r.isLiked ? 'text-red-400' : 'text-neutral-400')}>
+                              {r.likes}
+                            </span>
+                          </button>
+                        }
                       />
                     ) : (
-                      <p className="text-sm text-neutral-700 leading-relaxed">{r.content}</p>
+                      <>
+                        <p className="text-sm text-neutral-700 leading-relaxed">{r.content}</p>
+                        <button
+                          onClick={() => toggleReplyLike(c.id, r.id)}
+                          className="flex items-center gap-1 mt-1.5"
+                        >
+                          <Heart
+                            size={12}
+                            className={cn(
+                              'transition-colors',
+                              r.isLiked ? 'fill-red-400 text-red-400' : 'text-neutral-300',
+                            )}
+                          />
+                          <span className={cn('text-[11px]', r.isLiked ? 'text-red-400' : 'text-neutral-400')}>
+                            {r.likes}
+                          </span>
+                        </button>
+                      </>
                     )}
-                    <button
-                      onClick={() => toggleReplyLike(c.id, r.id)}
-                      className="flex items-center gap-1 mt-1.5"
-                    >
-                      <Heart
-                        size={12}
-                        className={cn(
-                          'transition-colors',
-                          r.isLiked ? 'fill-red-400 text-red-400' : 'text-neutral-300',
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          'text-[11px]',
-                          r.isLiked ? 'text-red-400' : 'text-neutral-400',
-                        )}
-                      >
-                        {r.likes}
-                      </span>
-                    </button>
                   </div>
                 </div>
               ))}
