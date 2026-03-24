@@ -5,9 +5,8 @@ import { BottomNavBar, NavTab } from './BottomNavBar'
 
 function getActiveTab(pathname: string): NavTab {
   if (pathname === '/fridges' || pathname.startsWith('/fridges/')) return 'fridge'
-  if (pathname.startsWith('/chat'))     return 'chat'
-  if (pathname.startsWith('/calendar')) return 'calendar'
-  if (pathname.startsWith('/my'))       return 'my'
+  if (pathname.startsWith('/community')) return 'community'
+  if (pathname.startsWith('/my'))        return 'my'
   return 'fridge'
 }
 
@@ -19,20 +18,13 @@ export function BottomNavBarWrapper() {
 
   const handleTabChange = (tab: NavTab) => {
     switch (tab) {
-      case 'fridge':
-        router.push('/fridges')
-        break
-      case 'chat':
-        router.push('/chat')
-        break
-      case 'calendar':
-        router.push('/calendar')
-        break
-      case 'my':
-        router.push('/my')
-        break
+      case 'fridge':    router.push('/fridges');    break
+      case 'community': router.push('/community');  break
+      case 'my':        router.push('/my');         break
     }
   }
+
+  if (pathname.startsWith('/invite/')) return null
 
   return <BottomNavBar activeTab={activeTab} onTabChange={handleTabChange} />
 }

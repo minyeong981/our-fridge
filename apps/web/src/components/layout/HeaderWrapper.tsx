@@ -6,18 +6,38 @@ import { FridgeDetailHeader } from '@/components/fridges/FridgeDetailHeader'
 import { BackHeader } from '@/components/layout/BackHeader'
 
 const BACK_HEADER_TITLES: Record<string, string> = {
-  add: '식재료 추가',
+  add: '음식 추가',
 }
 
 export function HeaderWrapper() {
   const pathname = usePathname()
 
+  if (pathname.startsWith('/invite/')) return null
+
   if (pathname === '/fridges') {
     return <FridgeListHeader />
   }
 
+  if (pathname === '/community') {
+    return <FridgeListHeader title="커뮤니티" />
+  }
+
+  if (pathname === '/my') {
+    return <FridgeListHeader title="마이" />
+  }
+
   if (/^\/fridges\/[^/]+$/.test(pathname)) {
     return <FridgeDetailHeader />
+  }
+
+  // items 상세 페이지는 자체 헤더 사용 (편집 버튼 등 페이지 내 액션 포함)
+  if (pathname.includes('/items/')) {
+    return null
+  }
+
+  if (pathname.startsWith('/community/')) {
+    const title = pathname.endsWith('/write') ? '글 작성' : '게시글'
+    return <BackHeader title={title} />
   }
 
   if (pathname.startsWith('/fridges/')) {

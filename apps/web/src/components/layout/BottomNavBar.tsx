@@ -1,9 +1,9 @@
 'use client'
 
-import { Refrigerator, MessageCircle, CalendarDays, User } from 'lucide-react'
+import { Refrigerator, Newspaper, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type NavTab = 'fridge' | 'chat' | 'calendar' | 'my'
+export type NavTab = 'fridge' | 'community' | 'my'
 
 interface NavItem {
   id: NavTab
@@ -12,10 +12,9 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'fridge',   icon: Refrigerator,  label: '냉장고'  },
-  { id: 'calendar', icon: CalendarDays,  label: '캘린더'  },
-  { id: 'chat',     icon: MessageCircle, label: '채팅'    },
-  { id: 'my',       icon: User,          label: '마이'    },
+  { id: 'fridge',    icon: Refrigerator, label: '냉장고'   },
+  { id: 'community', icon: Newspaper,    label: '커뮤니티' },
+  { id: 'my',        icon: User,         label: '마이'     },
 ]
 
 interface BottomNavBarProps {

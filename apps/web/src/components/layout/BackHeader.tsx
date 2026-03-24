@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Bell } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface BackHeaderProps {
@@ -19,7 +19,12 @@ export function BackHeader({ title }: BackHeaderProps) {
         <ChevronLeft size={22} className="text-neutral-700" />
       </button>
       <h1 className="font-bold text-base text-neutral-800">{title}</h1>
-      <div className="w-8" />
+      <button
+        aria-label="알림"
+        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 transition-colors"
+      >
+        <Bell size={20} className="text-neutral-500" />
+      </button>
     </header>
   )
 }
