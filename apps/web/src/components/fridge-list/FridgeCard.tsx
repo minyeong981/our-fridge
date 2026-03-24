@@ -50,10 +50,7 @@ export function FridgeCard({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span
-            className={cn(
-              'text-xs font-semibold px-2 py-0.5 rounded-full',
-              roleBadgeClass[role],
-            )}
+            className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', roleBadgeClass[role])}
           >
             {roleLabel[role]}
           </span>
@@ -66,7 +63,7 @@ export function FridgeCard({
           </span>
           <span className="flex items-center gap-1">
             <ShoppingBasket size={11} />
-            식재료 {itemCount}개
+            음식 {itemCount}개
           </span>
           <span>{updatedAt}</span>
         </div>

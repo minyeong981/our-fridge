@@ -48,7 +48,7 @@ export default function FridgesPage() {
           <div>
             <p className="font-bold text-neutral-700 text-base">아직 냉장고가 없어요</p>
             <p className="text-sm text-neutral-400 mt-1 mb-3">
-              냉장고를 추가하고 식재료를
+              냉장고를 추가하고 음식을
               <br />
               함께 관리해보세요
             </p>
