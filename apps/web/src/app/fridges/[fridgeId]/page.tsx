@@ -22,6 +22,7 @@ import { NoticeModal } from '@/components/fridges/NoticeModal'
 import { CreateFridgeModal } from '@/components/fridges/CreateFridgeModal'
 import { QrInviteModal } from '@/components/fridges/QrInviteModal'
 import { Toast } from '@/components/ui/Toast'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 type StorageType = '전체' | '냉장' | '냉동'
 type SortType = '유통기한순' | '등록일순'
@@ -145,10 +146,13 @@ export default function FridgeDetailPage() {
   const [isFridgeSettingsOpen, setIsFridgeSettingsOpen] = useState(false)
   const [isQrModalOpen, setIsQrModalOpen] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [memberToRemove, setMemberToRemove] = useState<Member | null>(null)
+  const [showDeleteFridgeConfirm, setShowDeleteFridgeConfirm] = useState(false)
 
-  const inviteUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/invite/MOCK_CODE_${fridgeId}`
-    : `https://ourfridge.app/invite/MOCK_CODE_${fridgeId}`
+  const inviteUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/invite/MOCK_CODE_${fridgeId}`
+      : `https://ourfridge.app/invite/MOCK_CODE_${fridgeId}`
 
   const handleCopyLink = async () => {
     setIsSidePanelOpen(false)
@@ -156,7 +160,16 @@ export default function FridgeDetailPage() {
       await navigator.clipboard.writeText(inviteUrl)
       setToastMessage('링크가 복사됐어요 🔗')
     } catch {
-      setToastMessage('복사에 실패했어요')
+      // http 환경(에뮬레이터 등) 폴백
+      const el = document.createElement('textarea')
+      el.value = inviteUrl
+      el.style.position = 'fixed'
+      el.style.opacity = '0'
+      document.body.appendChild(el)
+      el.select()
+      const ok = document.execCommand('copy')
+      document.body.removeChild(el)
+      setToastMessage(ok ? '링크가 복사됐어요 🔗' : '복사에 실패했어요')
     }
   }
 
@@ -399,12 +412,12 @@ export default function FridgeDetailPage() {
                   </button>
                 </div>
               </div>
-              <ul className="flex flex-col divide-y divide-neutral-50">
+              <ul className="flex flex-col">
                 {sortedMembers.map((m) => (
                   <li key={m.id} className="flex items-center gap-3 py-3">
                     <div
                       className={cn(
-                        'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0',
+                        'w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shrink-0',
                         m.color,
                       )}
                     >
@@ -422,7 +435,10 @@ export default function FridgeDetailPage() {
                       </span>
                     )}
                     {IS_ADMIN && !m.isMe && m.role !== '관리자' && (
-                      <button className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-red-50 transition-colors">
+                      <button
+                        onClick={() => setMemberToRemove(m)}
+                        className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-red-50 transition-colors"
+                      >
                         <UserMinus size={14} className="text-red-400" />
                       </button>
                     )}
@@ -469,7 +485,10 @@ export default function FridgeDetailPage() {
                         {label}
                       </button>
                     ))}
-                    <button className="flex items-center gap-3 py-3 text-sm font-semibold text-red-400 hover:text-red-500 transition-colors text-left">
+                    <button
+                      onClick={() => setShowDeleteFridgeConfirm(true)}
+                      className="flex items-center gap-3 py-3 text-sm font-semibold text-red-400 hover:text-red-500 transition-colors text-left"
+                    >
                       <Trash2 size={16} className="shrink-0" />
                       냉장고 삭제
                     </button>
@@ -499,9 +518,33 @@ export default function FridgeDetailPage() {
         />
       )}
 
-      {toastMessage && (
-        <Toast message={toastMessage} onDone={() => setToastMessage(null)} />
-      )}
+      {toastMessage && <Toast message={toastMessage} onDone={() => setToastMessage(null)} />}
+
+      <ConfirmModal
+        isOpen={!!memberToRemove}
+        title={`${memberToRemove?.name}을(를) 내보낼까요?`}
+        description="멤버를 냉장고에서 제거하면 더 이상 접근할 수 없게 돼요."
+        confirmLabel="내보내기"
+        onConfirm={() => {
+          /* 멤버 제거 처리 */
+          setMemberToRemove(null)
+        }}
+        onCancel={() => setMemberToRemove(null)}
+        destructive
+      />
+
+      <ConfirmModal
+        isOpen={showDeleteFridgeConfirm}
+        title="냉장고를 삭제할까요?"
+        description="냉장고와 모든 식재료 데이터가 삭제되며 복구할 수 없어요."
+        confirmLabel="삭제하기"
+        onConfirm={() => {
+          /* 냉장고 삭제 처리 */
+          setShowDeleteFridgeConfirm(false)
+        }}
+        onCancel={() => setShowDeleteFridgeConfirm(false)}
+        destructive
+      />
 
       <CreateFridgeModal
         isOpen={isFridgeSettingsOpen}
@@ -549,7 +592,7 @@ function FridgeItemCard({
         <div className="flex items-center gap-2">
           <p className="font-bold text-neutral-800 text-sm truncate">{name}</p>
           {isExpiringSoon && (
-            <span className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-500">
+            <span className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600">
               만료 임박
             </span>
           )}
@@ -558,7 +601,7 @@ function FridgeItemCard({
         <p
           className={cn(
             'text-xs mt-0.5 font-medium',
-            isExpiringSoon ? 'text-red-400' : 'text-neutral-400',
+            isExpiringSoon ? 'text-amber-500' : 'text-neutral-400',
           )}
         >
           {expiresIn !== null ? `남은 기한: ${expiresIn}일` : `유통기한: ${expiresAt}`}
