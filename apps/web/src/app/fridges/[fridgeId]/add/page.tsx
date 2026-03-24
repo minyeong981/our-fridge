@@ -1,154 +1,45 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Camera } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Camera } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { FormField } from '@/components/ui/FormField'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { CalendarPicker } from '@/components/ui/CalendarPicker'
 
 type StorageType = '냉장' | '냉동'
 
-const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
-
-function CalendarPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [viewDate, setViewDate] = useState(() => (value ? new Date(value + 'T00:00:00') : new Date()))
-
-  const year = viewDate.getFullYear()
-  const month = viewDate.getMonth()
-
-  const getDays = (): (number | null)[] => {
-    const firstDay = new Date(year, month, 1).getDay()
-    const daysInMonth = new Date(year, month + 1, 0).getDate()
-    const days: (number | null)[] = Array(firstDay).fill(null)
-    for (let d = 1; d <= daysInMonth; d++) days.push(d)
-    return days
-  }
-
-  const today = new Date()
-  const selectedDate = value ? new Date(value + 'T00:00:00') : null
-
-  const isInViewMonth =
-    !!selectedDate &&
-    selectedDate.getFullYear() === year &&
-    selectedDate.getMonth() === month
-
-  const isToday = (day: number) =>
-    today.getFullYear() === year && today.getMonth() === month && today.getDate() === day
-
-  const isSelected = (day: number) => isInViewMonth && selectedDate!.getDate() === day
-
-  const selectDay = (day: number) => {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    onChange(dateStr)
-    setIsOpen(false)
-  }
-
-  const prevMonth = () => setViewDate(new Date(year, month - 1, 1))
-  const nextMonth = () => setViewDate(new Date(year, month + 1, 1))
-
-  const formattedDate = value
-    ? new Date(value + 'T00:00:00').toLocaleDateString('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
-    : null
-
-  return (
-    <div className="flex flex-col gap-2">
-      <button
-        type="button"
-        onClick={() => setIsOpen((v) => !v)}
-        className={cn(
-          'w-full px-4 py-3 bg-white border rounded-xl text-sm text-left transition',
-          isOpen ? 'border-primary ring-2 ring-primary/10' : 'border-neutral-200',
-          formattedDate ? 'text-neutral-800' : 'text-neutral-400',
-        )}
-      >
-        {formattedDate ?? '날짜를 선택하세요'}
-      </button>
-
-      {isOpen && (
-        <div className="bg-white border border-neutral-100 rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <button
-              onClick={prevMonth}
-              className="w-8 h-8 flex items-center justify-center rounded-full focus:outline-none"
-            >
-              <ChevronLeft size={16} className="text-neutral-500" />
-            </button>
-            <span className="text-sm font-bold text-neutral-800">
-              {year}년 {month + 1}월
-            </span>
-            <button
-              onClick={nextMonth}
-              className="w-8 h-8 flex items-center justify-center rounded-full focus:outline-none"
-            >
-              <ChevronRight size={16} className="text-neutral-500" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-7 mb-1">
-            {DAY_LABELS.map((d, i) => (
-              <div
-                key={d}
-                className={cn(
-                  'text-center text-xs font-semibold py-1',
-                  i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-neutral-400',
-                )}
-              >
-                {d}
-              </div>
-            ))}
-          </div>
-
-          <div key={`${year}-${month}`} className="grid grid-cols-7">
-            {getDays().map((day, i) => (
-              <div key={`${year}-${month}-${i}`} className="flex items-center justify-center py-0.5">
-                {day !== null ? (
-                  <button
-                    onClick={() => selectDay(day)}
-                    className={cn(
-                      'w-9 h-9 rounded-full text-sm font-medium transition-colors',
-                      isSelected(day)
-                        ? 'bg-primary text-white font-bold'
-                        : isToday(day)
-                          ? 'ring-2 ring-primary text-primary font-bold'
-                          : i % 7 === 0
-                            ? 'text-red-400 hover:bg-red-50'
-                            : i % 7 === 6
-                              ? 'text-blue-400 hover:bg-blue-50'
-                              : 'text-neutral-700 hover:bg-neutral-100',
-                    )}
-                  >
-                    {day}
-                  </button>
-                ) : (
-                  <div className="w-9 h-9" />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
+// TODO: API 연동 시 제거
+const MOCK_ITEMS: Record<
+  string,
+  { name: string; expiresAt: string; storage: StorageType; locationText: string; memo: string }
+> = {
+  i1: {
+    name: '싱싱한 양상추',
+    expiresAt: '2024-06-28',
+    storage: '냉장',
+    locationText: '도어 포켓',
+    memo: '샌드위치용으로 구매함.',
+  },
 }
 
 export default function AddItemPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const itemId = searchParams.get('itemId')
+  const isEditMode = !!itemId
+  const prefill = itemId ? MOCK_ITEMS[itemId] : null
 
-  const [name, setName] = useState('')
-  const [expiresAt, setExpiresAt] = useState('')
-  const [storage, setStorage] = useState<StorageType>('냉장')
-  const [locationText, setLocationText] = useState('')
-  const [memo, setMemo] = useState('')
+  const [name, setName] = useState(prefill?.name ?? '')
+  const [expiresAt, setExpiresAt] = useState(prefill?.expiresAt ?? '')
+  const [storage, setStorage] = useState<StorageType>(prefill?.storage ?? '냉장')
+  const [locationText, setLocationText] = useState(prefill?.locationText ?? '')
+  const [memo, setMemo] = useState(prefill?.memo ?? '')
 
   const handleSubmit = () => {
     if (!name.trim()) return
-    // TODO: API 연동
+    // TODO: API 연동 (isEditMode ? update : create)
     router.back()
   }
 
@@ -157,12 +48,20 @@ export default function AddItemPage() {
       {/* 폼 */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="max-w-lg mx-auto w-full px-4 py-6 flex flex-col gap-5">
+          {/* 사진 등록 */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-neutral-700">사진</label>
+            <button className="w-full h-72 bg-white border border-dashed border-neutral-300 rounded-xl flex flex-col items-center justify-center gap-1.5 hover:bg-neutral-50 transition-colors">
+              <Camera size={22} className="text-neutral-400" />
+              <span className="text-xs text-neutral-400 font-medium">사진 추가</span>
+            </button>
+          </div>
           <FormField
-            label="식재료 이름"
+            label="이름"
             maxLength={20}
             value={name}
             onChange={setName}
-            placeholder="예: 유기농 시금치"
+            placeholder="예: 엄마표 김치찜"
           />
 
           {/* 소비기한 */}
@@ -196,25 +95,6 @@ export default function AddItemPage() {
           </div>
 
           <FormField
-            label="세부 위치"
-            maxLength={30}
-            value={locationText}
-            onChange={setLocationText}
-            placeholder="예: 두 번째 칸 구석"
-          />
-
-          {/* 사진 등록 */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-neutral-700">
-              사진 <span className="text-neutral-400 font-normal">(선택)</span>
-            </label>
-            <button className="w-full h-24 bg-white border border-dashed border-neutral-300 rounded-xl flex flex-col items-center justify-center gap-1.5 hover:bg-neutral-50 transition-colors">
-              <Camera size={22} className="text-neutral-400" />
-              <span className="text-xs text-neutral-400 font-medium">사진 추가</span>
-            </button>
-          </div>
-
-          <FormField
             label="메모"
             optional
             maxLength={100}
@@ -231,7 +111,7 @@ export default function AddItemPage() {
               onClick={handleSubmit}
               disabled={!name.trim() || !expiresAt || !locationText.trim()}
             >
-              냉장고에 넣기
+              {isEditMode ? '수정하기' : '냉장고에 넣기'}
             </PrimaryButton>
           </div>
         </div>
