@@ -2,20 +2,21 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTheme } from 'next-themes'
 import { createClient } from '@/lib/supabase/client'
 import {
-  Bell,
   Megaphone,
   FileText,
   Info,
   Globe,
+  Moon,
   LogOut,
   UserX,
   ChevronRight,
-  Refrigerator,
   FileEdit,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 const ME = {
   name: '김민지',
@@ -24,22 +25,18 @@ const ME = {
   email: 'minzi@example.com',
 }
 
-const MY_FRIDGES = [
-  { id: '1', name: '우리집 냉장고', role: 'owner' },
-  { id: '2', name: '사무실 냉장고', role: 'member' },
-]
-
-const ROLE_LABEL: Record<string, string> = {
-  owner: '관리자',
-  admin: '부관리자',
-  member: '멤버',
+const THEME_LABEL: Record<string, string> = {
+  light: '라이트',
+  dark: '다크',
+  system: '시스템',
 }
 
 export default function MyPage() {
   const router = useRouter()
-  const [notifEnabled, setNotifEnabled] = useState(true)
+  const { theme, setTheme } = useTheme()
   const [language, setLanguage] = useState<'ko' | 'en' | 'zh' | 'ja'>('ko')
   const [showLangSheet, setShowLangSheet] = useState(false)
+  const [showThemeSheet, setShowThemeSheet] = useState(false)
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false)
 
   return (
@@ -58,34 +55,13 @@ export default function MyPage() {
           <p className="font-bold text-base text-neutral-900">{ME.name}</p>
           <p className="text-xs text-neutral-400 mt-0.5 truncate">{ME.email}</p>
         </div>
-        <button className="text-xs text-neutral-400 border border-neutral-200 rounded-lg px-3 py-1.5 font-medium">
-          편집
-        </button>
       </div>
 
-      {/* 내 냉장고 */}
-      <div className="mt-3 bg-white px-5 py-4">
-        <p className="text-xs font-bold text-neutral-400 mb-3">내 냉장고</p>
-        <div className="flex flex-col gap-2">
-          {MY_FRIDGES.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => router.push(`/fridges/${f.id}`)}
-              className="flex items-center gap-3 py-1"
-            >
-              <Refrigerator size={16} className="text-neutral-400 shrink-0" />
-              <span className="flex-1 text-sm font-semibold text-neutral-800 text-left truncate">
-                {f.name}
-              </span>
-              <span className="text-xs text-neutral-400">{ROLE_LABEL[f.role]}</span>
-              <ChevronRight size={14} className="text-neutral-300" />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 내 게시글 */}
-      <div className="mt-3 bg-white">
+      {/* 내 활동 */}
+      <p className="px-5 pt-5 pb-1.5 text-[11px] font-bold text-neutral-400 tracking-widest">
+        내 활동
+      </p>
+      <div className="bg-white">
         <button
           onClick={() => router.push('/my/posts')}
           className="w-full flex items-center gap-3 px-5 py-4"
@@ -97,26 +73,20 @@ export default function MyPage() {
       </div>
 
       {/* 설정 */}
-      <div className="mt-3 bg-white divide-y divide-neutral-50">
-        {/* 알림 설정 */}
-        <div className="flex items-center gap-3 px-5 py-4">
-          <Bell size={16} className="text-neutral-400 shrink-0" />
-          <span className="flex-1 text-sm font-semibold text-neutral-800">알림 설정</span>
-          <button
-            onClick={() => setNotifEnabled((v) => !v)}
-            className={cn(
-              'relative w-11 h-6 rounded-full transition-colors duration-200',
-              notifEnabled ? 'bg-primary' : 'bg-neutral-200',
-            )}
-          >
-            <span
-              className={cn(
-                'absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-200',
-                notifEnabled ? 'left-[22px]' : 'left-0.5',
-              )}
-            />
-          </button>
-        </div>
+      <p className="px-5 pt-5 pb-1.5 text-[11px] font-bold text-neutral-400 tracking-widest">
+        설정
+      </p>
+      <div className="bg-white divide-y ">
+        {/* 화면 모드 */}
+        <button
+          onClick={() => setShowThemeSheet(true)}
+          className="w-full flex items-center gap-3 px-5 py-4"
+        >
+          <Moon size={16} className="text-neutral-400 shrink-0" />
+          <span className="flex-1 text-sm font-semibold text-neutral-800 text-left">화면 모드</span>
+          <span className="text-xs text-neutral-400 mr-1">{THEME_LABEL[theme ?? 'system']}</span>
+          <ChevronRight size={14} className="text-neutral-300" />
+        </button>
 
         {/* 언어 설정 */}
         <button
@@ -133,7 +103,10 @@ export default function MyPage() {
       </div>
 
       {/* 정보 */}
-      <div className="mt-3 bg-white divide-y divide-neutral-50">
+      <p className="px-5 pt-5 pb-1.5 text-[11px] font-bold text-neutral-400 tracking-widest">
+        정보
+      </p>
+      <div className="bg-white divide-y ">
         <button
           onClick={() => router.push('/my/notices')}
           className="w-full flex items-center gap-3 px-5 py-4"
@@ -148,7 +121,9 @@ export default function MyPage() {
           className="w-full flex items-center gap-3 px-5 py-4"
         >
           <FileText size={16} className="text-neutral-400 shrink-0" />
-          <span className="flex-1 text-sm font-semibold text-neutral-800 text-left">약관 및 정책</span>
+          <span className="flex-1 text-sm font-semibold text-neutral-800 text-left">
+            약관 및 정책
+          </span>
           <ChevronRight size={14} className="text-neutral-300" />
         </button>
 
@@ -160,7 +135,10 @@ export default function MyPage() {
       </div>
 
       {/* 계정 */}
-      <div className="mt-3 bg-white divide-y divide-neutral-50">
+      <p className="px-5 pt-5 pb-1.5 text-[11px] font-bold text-neutral-400 tracking-widest">
+        계정
+      </p>
+      <div className="bg-white divide-y ">
         <button
           onClick={async () => {
             const supabase = createClient()
@@ -184,6 +162,39 @@ export default function MyPage() {
 
       <div className="h-24" />
 
+      {/* 화면 모드 선택 시트 */}
+      {showThemeSheet && (
+        <>
+          <button
+            className="fixed inset-0 bg-black/30 z-40"
+            onClick={() => setShowThemeSheet(false)}
+          />
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-[60] pb-safe">
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 bg-neutral-200 rounded-full" />
+            </div>
+            <p className="text-sm font-bold text-neutral-800 px-5 pt-2 pb-4">화면 모드</p>
+            {(['light', 'dark', 'system'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => {
+                  setTheme(t)
+                  setShowThemeSheet(false)
+                }}
+                className={cn(
+                  'w-full flex items-center justify-between px-5 py-4 text-sm font-semibold',
+                  theme === t ? 'text-primary' : 'text-neutral-700',
+                )}
+              >
+                <span>{THEME_LABEL[t]}</span>
+                {theme === t && <span className="w-2 h-2 rounded-full bg-primary" />}
+              </button>
+            ))}
+            <div className="h-8" />
+          </div>
+        </>
+      )}
+
       {/* 언어 선택 시트 */}
       {showLangSheet && (
         <>
@@ -191,17 +202,19 @@ export default function MyPage() {
             className="fixed inset-0 bg-black/30 z-40"
             onClick={() => setShowLangSheet(false)}
           />
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 pb-safe overflow-y-auto max-h-[60vh]">
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-[60] pb-safe overflow-y-auto max-h-[60vh]">
             <div className="flex justify-center pt-3 pb-2">
               <div className="w-10 h-1 bg-neutral-200 rounded-full" />
             </div>
             <p className="text-sm font-bold text-neutral-800 px-5 pt-2 pb-4">언어 선택</p>
-            {([
-              { code: 'ko', label: '한국어' },
-              { code: 'en', label: 'English' },
-              { code: 'zh', label: '中文' },
-              { code: 'ja', label: '日本語' },
-            ] as const).map(({ code, label }) => (
+            {(
+              [
+                { code: 'ko', label: '한국어' },
+                { code: 'en', label: 'English' },
+                { code: 'zh', label: '中文' },
+                { code: 'ja', label: '日本語' },
+              ] as const
+            ).map(({ code, label }) => (
               <button
                 key={code}
                 onClick={() => {
@@ -223,36 +236,17 @@ export default function MyPage() {
       )}
 
       {/* 탈퇴 확인 모달 */}
-      {showWithdrawConfirm && (
-        <>
-          <button
-            className="fixed inset-0 bg-black/30 z-40"
-            onClick={() => setShowWithdrawConfirm(false)}
-          />
-          <div className="fixed inset-0 flex items-center justify-center z-50 px-6">
-            <div className="bg-white rounded-2xl w-full max-w-sm p-6">
-              <p className="text-base font-bold text-neutral-900 mb-2">정말 탈퇴할까요?</p>
-              <p className="text-sm text-neutral-500 leading-relaxed mb-6">
-                탈퇴 시 작성한 게시글과 댓글이 모두 삭제되며 복구할 수 없어요.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowWithdrawConfirm(false)}
-                  className="flex-1 py-3 rounded-xl bg-neutral-100 text-sm font-bold text-neutral-600"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={() => {/* 탈퇴 처리 */}}
-                  className="flex-1 py-3 rounded-xl bg-red-500 text-sm font-bold text-white"
-                >
-                  탈퇴하기
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      <ConfirmModal
+        isOpen={showWithdrawConfirm}
+        title="정말 탈퇴할까요?"
+        description="탈퇴 시 작성한 게시글과 댓글이 모두 삭제되며 복구할 수 없어요."
+        confirmLabel="탈퇴하기"
+        onConfirm={() => {
+          /* 탈퇴 처리 */
+        }}
+        onCancel={() => setShowWithdrawConfirm(false)}
+        destructive
+      />
     </div>
   )
 }
