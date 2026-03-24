@@ -13,6 +13,8 @@ export function HeaderWrapper() {
   const pathname = usePathname()
 
   if (pathname.startsWith('/invite/')) return null
+  if (pathname.startsWith('/login')) return null
+  if (pathname.startsWith('/auth/')) return null
 
   if (pathname === '/fridges') {
     return <FridgeListHeader />

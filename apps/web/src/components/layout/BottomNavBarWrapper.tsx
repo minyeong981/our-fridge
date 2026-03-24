@@ -25,6 +25,8 @@ export function BottomNavBarWrapper() {
   }
 
   if (pathname.startsWith('/invite/')) return null
+  if (pathname.startsWith('/login')) return null
+  if (pathname.startsWith('/auth/')) return null
 
   return <BottomNavBar activeTab={activeTab} onTabChange={handleTabChange} />
 }

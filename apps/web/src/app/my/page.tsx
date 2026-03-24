@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import {
   Bell,
   Megaphone,
@@ -37,7 +38,7 @@ const ROLE_LABEL: Record<string, string> = {
 export default function MyPage() {
   const router = useRouter()
   const [notifEnabled, setNotifEnabled] = useState(true)
-  const [language, setLanguage] = useState<'ko' | 'en'>('ko')
+  const [language, setLanguage] = useState<'ko' | 'en' | 'zh' | 'ja'>('ko')
   const [showLangSheet, setShowLangSheet] = useState(false)
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false)
 
@@ -124,7 +125,9 @@ export default function MyPage() {
         >
           <Globe size={16} className="text-neutral-400 shrink-0" />
           <span className="flex-1 text-sm font-semibold text-neutral-800 text-left">언어 설정</span>
-          <span className="text-xs text-neutral-400 mr-1">{language === 'ko' ? '한국어' : 'English'}</span>
+          <span className="text-xs text-neutral-400 mr-1">
+            {{ ko: '한국어', en: 'English', zh: '中文', ja: '日本語' }[language]}
+          </span>
           <ChevronRight size={14} className="text-neutral-300" />
         </button>
       </div>
@@ -159,7 +162,11 @@ export default function MyPage() {
       {/* 계정 */}
       <div className="mt-3 bg-white divide-y divide-neutral-50">
         <button
-          onClick={() => {/* 로그아웃 처리 */}}
+          onClick={async () => {
+            const supabase = createClient()
+            await supabase.auth.signOut()
+            router.push('/login')
+          }}
           className="w-full flex items-center gap-3 px-5 py-4"
         >
           <LogOut size={16} className="text-neutral-400 shrink-0" />
@@ -180,33 +187,37 @@ export default function MyPage() {
       {/* 언어 선택 시트 */}
       {showLangSheet && (
         <>
-          <div
+          <button
             className="fixed inset-0 bg-black/30 z-40"
             onClick={() => setShowLangSheet(false)}
           />
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 pb-8">
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 pb-safe overflow-y-auto max-h-[60vh]">
             <div className="flex justify-center pt-3 pb-2">
               <div className="w-10 h-1 bg-neutral-200 rounded-full" />
             </div>
             <p className="text-sm font-bold text-neutral-800 px-5 pt-2 pb-4">언어 선택</p>
-            {(['ko', 'en'] as const).map((lang) => (
+            {([
+              { code: 'ko', label: '한국어' },
+              { code: 'en', label: 'English' },
+              { code: 'zh', label: '中文' },
+              { code: 'ja', label: '日本語' },
+            ] as const).map(({ code, label }) => (
               <button
-                key={lang}
+                key={code}
                 onClick={() => {
-                  setLanguage(lang)
+                  setLanguage(code)
                   setShowLangSheet(false)
                 }}
                 className={cn(
                   'w-full flex items-center justify-between px-5 py-4 text-sm font-semibold',
-                  language === lang ? 'text-primary' : 'text-neutral-700',
+                  language === code ? 'text-primary' : 'text-neutral-700',
                 )}
               >
-                <span>{lang === 'ko' ? '한국어' : 'English'}</span>
-                {language === lang && (
-                  <span className="w-2 h-2 rounded-full bg-primary" />
-                )}
+                <span>{label}</span>
+                {language === code && <span className="w-2 h-2 rounded-full bg-primary" />}
               </button>
             ))}
+            <div className="h-8" />
           </div>
         </>
       )}
@@ -214,7 +225,7 @@ export default function MyPage() {
       {/* 탈퇴 확인 모달 */}
       {showWithdrawConfirm && (
         <>
-          <div
+          <button
             className="fixed inset-0 bg-black/30 z-40"
             onClick={() => setShowWithdrawConfirm(false)}
           />
