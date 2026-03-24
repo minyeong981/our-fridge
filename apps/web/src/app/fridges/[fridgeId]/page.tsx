@@ -1,11 +1,27 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, ChevronDown, Megaphone, BookOpen } from 'lucide-react'
+import {
+  Plus,
+  ChevronDown,
+  Megaphone,
+  BookOpen,
+  QrCode,
+  Link2,
+  BarChart2,
+  History,
+  Settings,
+  Trash2,
+  UserMinus,
+} from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Member } from '@/components/fridges/MemberSheet'
 import { useFridgeDetail } from '@/contexts/FridgeDetailContext'
+import { NoticeModal } from '@/components/fridges/NoticeModal'
+import { CreateFridgeModal } from '@/components/fridges/CreateFridgeModal'
+import { QrInviteModal } from '@/components/fridges/QrInviteModal'
+import { Toast } from '@/components/ui/Toast'
 
 type StorageType = '전체' | '냉장' | '냉동'
 type SortType = '유통기한순' | '등록일순'
@@ -20,6 +36,7 @@ function dismissNoticePermanent(id: string) {
 }
 
 const MOCK_FRIDGE = { name: '거실 냉장고', location: '주방 • 402호' }
+const IS_ADMIN = true // TODO: 실제 권한으로 교체
 const MOCK_MEMBERS: Member[] = [
   {
     id: 'm1',
@@ -27,6 +44,7 @@ const MOCK_MEMBERS: Member[] = [
     initial: 'S',
     color: 'bg-primary-200 text-primary-700',
     role: '관리자',
+    isMe: true,
   },
   {
     id: 'm2',
@@ -49,6 +67,12 @@ const MOCK_MEMBERS: Member[] = [
     color: 'bg-neutral-200 text-neutral-600',
     role: '멤버',
   },
+]
+
+const sortedMembers = [
+  ...MOCK_MEMBERS.filter((m) => m.isMe),
+  ...MOCK_MEMBERS.filter((m) => !m.isMe && m.role === '관리자'),
+  ...MOCK_MEMBERS.filter((m) => !m.isMe && m.role !== '관리자'),
 ]
 const MOCK_NOTICES = [
   { id: 'n1', text: '이번 주말 냉장고 청소 예정입니다! 모두 본인 음식은 미리 확인 부탁드립니다.' },
@@ -112,10 +136,34 @@ export default function FridgeDetailPage() {
   const [storageFilter, setStorageFilter] = useState<StorageType>('전체')
   const [sortBy, setSortBy] = useState<SortType>('유통기한순')
   const [isSortOpen, setIsSortOpen] = useState(false)
-  const { isSidePanelOpen, setIsSidePanelOpen, setFridgeName, setFridgeLocation } = useFridgeDetail()
+  const { isSidePanelOpen, setIsSidePanelOpen, setFridgeName, setFridgeLocation } =
+    useFridgeDetail()
   const [isRulesOpen, setIsRulesOpen] = useState(false)
   const [isNoticeExpanded, setIsNoticeExpanded] = useState(false)
   const [dismissedNoticeIds, setDismissedNoticeIds] = useState<Set<string>>(new Set())
+  const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(false)
+  const [isFridgeSettingsOpen, setIsFridgeSettingsOpen] = useState(false)
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+
+  const inviteUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/invite/MOCK_CODE_${fridgeId}`
+    : `https://ourfridge.app/invite/MOCK_CODE_${fridgeId}`
+
+  const handleCopyLink = async () => {
+    setIsSidePanelOpen(false)
+    try {
+      await navigator.clipboard.writeText(inviteUrl)
+      setToastMessage('링크가 복사됐어요 🔗')
+    } catch {
+      setToastMessage('복사에 실패했어요')
+    }
+  }
+
+  const handleOpenQr = () => {
+    setIsSidePanelOpen(false)
+    setTimeout(() => setIsQrModalOpen(true), 300)
+  }
 
   useEffect(() => {
     setFridgeName(MOCK_FRIDGE.name)
@@ -130,7 +178,10 @@ export default function FridgeDetailPage() {
   }, [])
 
   const visibleNotices = MOCK_NOTICES.filter((n) => !dismissedNoticeIds.has(n.id))
-  const filteredItems = storageFilter === '전체' ? MOCK_ITEMS : MOCK_ITEMS.filter((i) => i.storageType === storageFilter)
+  const filteredItems =
+    storageFilter === '전체'
+      ? MOCK_ITEMS
+      : MOCK_ITEMS.filter((i) => i.storageType === storageFilter)
 
   const handleDismissPermanent = () => {
     visibleNotices.forEach((n) => dismissNoticePermanent(n.id))
@@ -260,12 +311,14 @@ export default function FridgeDetailPage() {
               </div>
             </div>
 
-            {/* 식재료 목록 */}
+            {/* 음식 목록 */}
             <div className="flex flex-col gap-3 px-4">
               {filteredItems.length === 0 ? (
-                <p className="text-center text-sm text-neutral-400 py-8">식재료가 없습니다</p>
+                <p className="text-center text-sm text-neutral-400 py-8">음식이 없습니다</p>
               ) : (
-                filteredItems.map((item) => <FridgeItemCard key={item.id} {...item} />)
+                filteredItems.map((item) => (
+                  <FridgeItemCard key={item.id} {...item} fridgeId={fridgeId} />
+                ))
               )}
             </div>
           </div>
@@ -292,7 +345,7 @@ export default function FridgeDetailPage() {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="h-full bg-white overflow-y-auto max-w-lg mx-auto">
+          <div className="h-full bg-white overflow-y-auto max-w-lg mx-auto pb-8">
             {/* 규칙 */}
             <div className="px-5 pt-5 pb-2">
               <button
@@ -323,16 +376,31 @@ export default function FridgeDetailPage() {
               )}
             </div>
 
-            {/* 구분선 */}
             <div className="h-px bg-neutral-100 mx-5 my-2" />
 
             {/* 멤버 */}
-            <div className="px-5 pt-3 pb-8">
-              <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">
-                멤버 {MOCK_MEMBERS.length}명
-              </p>
+            <div className="px-5 pt-3">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
+                  멤버 {MOCK_MEMBERS.length}명
+                </p>
+                <div className="flex gap-1">
+                  <button
+                    onClick={handleOpenQr}
+                    className="flex items-center gap-1 text-xs font-semibold text-primary px-2.5 py-1 rounded-lg hover:bg-primary-50 transition-colors"
+                  >
+                    <QrCode size={12} /> QR
+                  </button>
+                  <button
+                    onClick={handleCopyLink}
+                    className="flex items-center gap-1 text-xs font-semibold text-primary px-2.5 py-1 rounded-lg hover:bg-primary-50 transition-colors"
+                  >
+                    <Link2 size={12} /> 링크
+                  </button>
+                </div>
+              </div>
               <ul className="flex flex-col divide-y divide-neutral-50">
-                {MOCK_MEMBERS.map((m) => (
+                {sortedMembers.map((m) => (
                   <li key={m.id} className="flex items-center gap-3 py-3">
                     <div
                       className={cn(
@@ -342,21 +410,73 @@ export default function FridgeDetailPage() {
                     >
                       {m.initial}
                     </div>
-                    <p className="flex-1 font-semibold text-sm text-neutral-800">{m.name}</p>
-                    <span
-                      className={cn(
-                        'text-xs font-semibold px-2.5 py-1 rounded-full',
-                        m.role === '관리자'
-                          ? 'bg-secondary-100 text-secondary-600'
-                          : 'bg-primary-100 text-primary-600',
+                    <p className="flex-1 font-semibold text-sm text-neutral-800">
+                      {m.name}
+                      {m.isMe && (
+                        <span className="ml-1.5 text-xs font-normal text-neutral-400">나</span>
                       )}
-                    >
-                      {m.role}
-                    </span>
+                    </p>
+                    {m.role === '관리자' && (
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-secondary-100 text-secondary-600">
+                        관리자
+                      </span>
+                    )}
+                    {IS_ADMIN && !m.isMe && m.role !== '관리자' && (
+                      <button className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-red-50 transition-colors">
+                        <UserMinus size={14} className="text-red-400" />
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
             </div>
+
+            {/* 관리자 섹션 */}
+            {IS_ADMIN && (
+              <>
+                <div className="h-px bg-neutral-100 mx-5 my-4" />
+                <div className="px-5">
+                  <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-2">
+                    관리
+                  </p>
+                  <div className="flex flex-col">
+                    {[
+                      {
+                        icon: Megaphone,
+                        label: '공지 작성',
+                        onClick: () => {
+                          setIsSidePanelOpen(false)
+                          setIsNoticeModalOpen(true)
+                        },
+                      },
+                      // TODO : { icon: BarChart2, label: '대시보드', onClick: () => {} },
+                      // TODO : { icon: History,   label: '처리 이력', onClick: () => {} },
+                      {
+                        icon: Settings,
+                        label: '냉장고 설정',
+                        onClick: () => {
+                          setIsSidePanelOpen(false)
+                          setIsFridgeSettingsOpen(true)
+                        },
+                      },
+                    ].map(({ icon: Icon, label, onClick }) => (
+                      <button
+                        key={label}
+                        onClick={onClick}
+                        className="flex items-center gap-3 py-3 text-sm font-semibold text-neutral-700 hover:text-primary transition-colors text-left"
+                      >
+                        <Icon size={16} className="text-neutral-400 shrink-0" />
+                        {label}
+                      </button>
+                    ))}
+                    <button className="flex items-center gap-3 py-3 text-sm font-semibold text-red-400 hover:text-red-500 transition-colors text-left">
+                      <Trash2 size={16} className="shrink-0" />
+                      냉장고 삭제
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -366,28 +486,62 @@ export default function FridgeDetailPage() {
         className="fixed bottom-20 right-4 flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/30 font-semibold text-sm z-40"
       >
         <Plus size={18} strokeWidth={2.5} />
-        넣기
+        추가
       </button>
+
+      <NoticeModal isOpen={isNoticeModalOpen} onClose={() => setIsNoticeModalOpen(false)} />
+
+      {isQrModalOpen && (
+        <QrInviteModal
+          fridgeName={MOCK_FRIDGE.name}
+          inviteUrl={inviteUrl}
+          onClose={() => setIsQrModalOpen(false)}
+        />
+      )}
+
+      {toastMessage && (
+        <Toast message={toastMessage} onDone={() => setToastMessage(null)} />
+      )}
+
+      <CreateFridgeModal
+        isOpen={isFridgeSettingsOpen}
+        onClose={() => setIsFridgeSettingsOpen(false)}
+        initialData={{
+          emoji: '🧊',
+          name: MOCK_FRIDGE.name,
+          location: MOCK_FRIDGE.location,
+          memo: '',
+          rules: MOCK_RULES.map((r) => r.text).join('\n'),
+        }}
+      />
     </div>
   )
 }
 
 function FridgeItemCard({
+  id,
+  fridgeId,
   name,
   emoji,
   addedBy,
   expiresIn,
   expiresAt,
 }: {
+  id: string
+  fridgeId: string
   name: string
   emoji: string
   addedBy: string
   expiresIn: number | null
   expiresAt: string | null
 }) {
+  const router = useRouter()
   const isExpiringSoon = expiresIn !== null && expiresIn <= 3
   return (
-    <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-4 shadow-sm border border-neutral-100">
+    <div
+      onClick={() => router.push(`/fridges/${fridgeId}/items/${id}`)}
+      className="flex items-center gap-3 bg-white rounded-2xl px-4 py-4 shadow-sm border border-neutral-100 cursor-pointer active:bg-neutral-50 transition-colors"
+    >
       <div className="w-11 h-11 rounded-xl bg-neutral-50 flex items-center justify-center text-2xl shrink-0">
         {emoji}
       </div>
@@ -400,7 +554,7 @@ function FridgeItemCard({
             </span>
           )}
         </div>
-        <p className="text-xs text-neutral-400 mt-0.5">👤 {addedBy} 님이 추가함</p>
+        <p className="text-xs text-neutral-400 mt-0.5">{addedBy}</p>
         <p
           className={cn(
             'text-xs mt-0.5 font-medium',

@@ -8,17 +8,27 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton'
 
 const EMOJI_OPTIONS = ['🧊', '🏠', '🏢', '🥬', '🍊', '🌿', '⭐', '🏖️', '🍕', '❤️']
 
+interface FridgeData {
+  emoji: string
+  name: string
+  location: string
+  memo: string
+  rules: string
+}
+
 interface CreateFridgeModalProps {
   isOpen: boolean
   onClose: () => void
+  initialData?: FridgeData
 }
 
-export function CreateFridgeModal({ isOpen, onClose }: CreateFridgeModalProps) {
-  const [name, setName] = useState('')
-  const [selectedEmoji, setSelectedEmoji] = useState('🧊')
-  const [location, setLocation] = useState('')
-  const [memo, setMemo] = useState('')
-  const [rules, setRules] = useState('')
+export function CreateFridgeModal({ isOpen, onClose, initialData }: CreateFridgeModalProps) {
+  const isEditMode = !!initialData
+  const [name, setName] = useState(initialData?.name ?? '')
+  const [selectedEmoji, setSelectedEmoji] = useState(initialData?.emoji ?? '🧊')
+  const [location, setLocation] = useState(initialData?.location ?? '')
+  const [memo, setMemo] = useState(initialData?.memo ?? '')
+  const [rules, setRules] = useState(initialData?.rules ?? '')
 
   const handleSubmit = () => {
     if (!name.trim()) return
@@ -47,7 +57,7 @@ export function CreateFridgeModal({ isOpen, onClose }: CreateFridgeModalProps) {
         </div>
 
         <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-100">
-          <h2 className="font-bold text-base text-neutral-800">냉장고 추가하기</h2>
+          <h2 className="font-bold text-base text-neutral-800">{isEditMode ? '냉장고 설정' : '냉장고 추가하기'}</h2>
           <button
             onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 transition-colors"
@@ -122,7 +132,7 @@ export function CreateFridgeModal({ isOpen, onClose }: CreateFridgeModalProps) {
           />
 
           <PrimaryButton onClick={handleSubmit} disabled={!name.trim()}>
-            냉장고 추가하기
+            {isEditMode ? '저장하기' : '냉장고 추가하기'}
           </PrimaryButton>
         </div>
       </div>
