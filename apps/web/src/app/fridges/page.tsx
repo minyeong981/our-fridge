@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { FridgeCard, FridgeCardProps } from '@/components/fridge-list/FridgeCard'
-import { CreateFridgeModal } from '@/components/fridges/CreateFridgeModal'
+import { FridgeFormPanel } from '@/components/fridges/FridgeFormPanel'
 
 const MOCK_FRIDGES: FridgeCardProps[] = [
   {
@@ -81,7 +81,7 @@ export default function FridgesPage() {
         </button>
       )}
 
-      <CreateFridgeModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <FridgeFormPanel isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   )
 }
