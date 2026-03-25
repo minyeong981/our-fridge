@@ -37,9 +37,12 @@ export function HeaderWrapper() {
     return null
   }
 
+  if (pathname === '/community/write') {
+    return null
+  }
+
   if (pathname.startsWith('/community/')) {
-    const title = pathname.endsWith('/write') ? '글 작성' : '게시글'
-    return <BackHeader title={title} />
+    return <BackHeader title="게시글" />
   }
 
   if (pathname.startsWith('/fridges/')) {
