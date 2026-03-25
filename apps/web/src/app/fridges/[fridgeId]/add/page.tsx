@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { Camera } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -24,7 +24,7 @@ const MOCK_ITEMS: Record<
   },
 }
 
-export default function AddItemPage() {
+function AddItemContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const itemId = searchParams.get('itemId')
@@ -117,5 +117,13 @@ export default function AddItemPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AddItemPage() {
+  return (
+    <Suspense>
+      <AddItemContent />
+    </Suspense>
   )
 }

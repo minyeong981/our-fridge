@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Camera, SendHorizonal } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -14,7 +14,7 @@ const MOCK_POSTS: Record<string, { category: Category; title: string; content: s
   p2: { category: '나눔/공유', title: '냉동 만두 가져가실 분!', content: '어제 마트에서 대용량으로 샀는데 혼자 먹기 너무 많아요. 원하시는 분 가져가세요.' },
 }
 
-export default function CommunityWritePage() {
+function CommunityWriteContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const postId = searchParams.get('postId')
@@ -106,5 +106,13 @@ export default function CommunityWritePage() {
         <SendHorizonal size={18} />
       </button>
     </div>
+  )
+}
+
+export default function CommunityWritePage() {
+  return (
+    <Suspense>
+      <CommunityWriteContent />
+    </Suspense>
   )
 }
