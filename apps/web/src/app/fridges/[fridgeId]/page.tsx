@@ -4,28 +4,29 @@ import { useState, useEffect } from 'react'
 import {
   Plus,
   ChevronDown,
+  ChevronRight,
   Megaphone,
   BookOpen,
   QrCode,
   Link2,
-  BarChart2,
-  History,
   Settings,
-  Trash2,
   UserMinus,
 } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Member } from '@/components/fridges/MemberSheet'
 import { useFridgeDetail } from '@/contexts/FridgeDetailContext'
+import { FridgeFormPanel } from '@/components/fridges/FridgeFormPanel'
 import { NoticeModal } from '@/components/fridges/NoticeModal'
-import { CreateFridgeModal } from '@/components/fridges/CreateFridgeModal'
 import { QrInviteModal } from '@/components/fridges/QrInviteModal'
 import { Toast } from '@/components/ui/Toast'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 type StorageType = '전체' | '냉장' | '냉동'
 type SortType = '유통기한순' | '등록일순'
+
+const SIDE_PANEL_CHEVRON_SIZE = 14
+const SIDE_PANEL_CHEVRON_COLOR = 'text-neutral-300'
 
 function isNoticePermanentlyDismissed(id: string): boolean {
   if (typeof window === 'undefined') return false
@@ -142,12 +143,11 @@ export default function FridgeDetailPage() {
   const [isRulesOpen, setIsRulesOpen] = useState(false)
   const [isNoticeExpanded, setIsNoticeExpanded] = useState(false)
   const [dismissedNoticeIds, setDismissedNoticeIds] = useState<Set<string>>(new Set())
+  const [isFridgeSettingsPanelOpen, setIsFridgeSettingsPanelOpen] = useState(false)
   const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(false)
-  const [isFridgeSettingsOpen, setIsFridgeSettingsOpen] = useState(false)
   const [isQrModalOpen, setIsQrModalOpen] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [memberToRemove, setMemberToRemove] = useState<Member | null>(null)
-  const [showDeleteFridgeConfirm, setShowDeleteFridgeConfirm] = useState(false)
 
   const inviteUrl =
     typeof window !== 'undefined'
@@ -368,9 +368,9 @@ export default function FridgeDetailPage() {
                 <BookOpen size={16} className="text-neutral-500 shrink-0" />
                 <span className="text-sm font-semibold text-neutral-700">냉장고 규칙</span>
                 <ChevronDown
-                  size={16}
+                  size={SIDE_PANEL_CHEVRON_SIZE}
                   className={cn(
-                    'text-neutral-400 ml-auto transition-transform duration-200 shrink-0',
+                    `${SIDE_PANEL_CHEVRON_COLOR} ml-auto transition-transform duration-200 shrink-0`,
                     isRulesOpen && 'rotate-180',
                   )}
                 />
@@ -388,8 +388,37 @@ export default function FridgeDetailPage() {
                 </div>
               )}
             </div>
+            {/* 관리자 섹션 */}
+            {IS_ADMIN && (
+              <>
+                <div className="h-px mx-5 my-1" />
+                <div className="px-5">
+                  <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-2">
+                    관리
+                  </p>
+                  <button
+                    onClick={() => setIsNoticeModalOpen(true)}
+                    className="w-full flex items-center gap-3 py-3 text-sm font-semibold text-neutral-700 hover:text-primary transition-colors text-left"
+                  >
+                    <Megaphone size={16} className="text-neutral-400 shrink-0" />
+                    <span className="flex-1">공지 작성</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsSidePanelOpen(false)
+                      setIsFridgeSettingsPanelOpen(true)
+                    }}
+                    className="w-full flex items-center gap-3 py-3 text-sm font-semibold text-neutral-700 hover:text-primary transition-colors text-left"
+                  >
+                    <Settings size={16} className="text-neutral-400 shrink-0" />
+                    <span className="flex-1">냉장고 설정</span>
+                    <ChevronRight size={SIDE_PANEL_CHEVRON_SIZE} className={`${SIDE_PANEL_CHEVRON_COLOR} shrink-0`} />
+                  </button>
+                </div>
+              </>
+            )}
 
-            <div className="h-px bg-neutral-100 mx-5 my-2" />
+            {/* <div className="h-px bg-neutral-100 mx-5 my-2" /> */}
 
             {/* 멤버 */}
             <div className="px-5 pt-3">
@@ -446,56 +475,6 @@ export default function FridgeDetailPage() {
                 ))}
               </ul>
             </div>
-
-            {/* 관리자 섹션 */}
-            {IS_ADMIN && (
-              <>
-                <div className="h-px bg-neutral-100 mx-5 my-4" />
-                <div className="px-5">
-                  <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-2">
-                    관리
-                  </p>
-                  <div className="flex flex-col">
-                    {[
-                      {
-                        icon: Megaphone,
-                        label: '공지 작성',
-                        onClick: () => {
-                          setIsSidePanelOpen(false)
-                          setIsNoticeModalOpen(true)
-                        },
-                      },
-                      // TODO : { icon: BarChart2, label: '대시보드', onClick: () => {} },
-                      // TODO : { icon: History,   label: '처리 이력', onClick: () => {} },
-                      {
-                        icon: Settings,
-                        label: '냉장고 설정',
-                        onClick: () => {
-                          setIsSidePanelOpen(false)
-                          setIsFridgeSettingsOpen(true)
-                        },
-                      },
-                    ].map(({ icon: Icon, label, onClick }) => (
-                      <button
-                        key={label}
-                        onClick={onClick}
-                        className="flex items-center gap-3 py-3 text-sm font-semibold text-neutral-700 hover:text-primary transition-colors text-left"
-                      >
-                        <Icon size={16} className="text-neutral-400 shrink-0" />
-                        {label}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => setShowDeleteFridgeConfirm(true)}
-                      className="flex items-center gap-3 py-3 text-sm font-semibold text-red-400 hover:text-red-500 transition-colors text-left"
-                    >
-                      <Trash2 size={16} className="shrink-0" />
-                      냉장고 삭제
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>
@@ -533,28 +512,19 @@ export default function FridgeDetailPage() {
         destructive
       />
 
-      <ConfirmModal
-        isOpen={showDeleteFridgeConfirm}
-        title="냉장고를 삭제할까요?"
-        description="냉장고와 모든 식재료 데이터가 삭제되며 복구할 수 없어요."
-        confirmLabel="삭제하기"
-        onConfirm={() => {
-          /* 냉장고 삭제 처리 */
-          setShowDeleteFridgeConfirm(false)
-        }}
-        onCancel={() => setShowDeleteFridgeConfirm(false)}
-        destructive
-      />
-
-      <CreateFridgeModal
-        isOpen={isFridgeSettingsOpen}
-        onClose={() => setIsFridgeSettingsOpen(false)}
+      <FridgeFormPanel
+        isOpen={isFridgeSettingsPanelOpen}
+        onClose={() => setIsFridgeSettingsPanelOpen(false)}
         initialData={{
           emoji: '🧊',
           name: MOCK_FRIDGE.name,
           location: MOCK_FRIDGE.location,
           memo: '',
           rules: MOCK_RULES.map((r) => r.text).join('\n'),
+        }}
+        onDelete={() => {
+          /* TODO: 냉장고 삭제 처리 후 라우팅 */
+          setIsFridgeSettingsPanelOpen(false)
         }}
       />
     </div>
