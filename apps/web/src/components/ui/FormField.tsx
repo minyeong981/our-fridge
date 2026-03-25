@@ -44,7 +44,7 @@ export function FormField({
           {optional && <span className="text-neutral-400 font-normal ml-1">(선택)</span>}
         </label>
         <span
-          className={cn('text-xs', value.length >= maxLength ? 'text-red-400' : 'text-neutral-400')}
+          className="text-xs text-neutral-400"
         >
           {value.length}/{maxLength}
         </span>
