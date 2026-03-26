@@ -28,13 +28,23 @@
     "plugins": [
       "expo-router",
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/our-fridge-icon.png",
+          "color": "#4AB8CF",
+          "sounds": []
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/our-fridge-icon.png",
+          "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
           "dark": {
             "image": "./assets/images/our-fridge-icon.png",
+            "imageWidth": 200,
             "resizeMode": "contain",
             "backgroundColor": "#1C1C1E"
           }

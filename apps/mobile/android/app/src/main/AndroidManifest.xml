@@ -27,6 +27,12 @@
         <data android:scheme="ourfridge"/>
         <data android:scheme="exp+our-fridge"/>
       </intent-filter>
+      <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="https" android:host="ourfridge.app" android:pathPrefix="/invite/"/>
+      </intent-filter>
     </activity>
   </application>
 </manifest>
