@@ -1,3 +1,4 @@
+import type { Profile, UpsertProfileInput } from '@our-fridge/shared'
 import { supabase } from './client'
 
 export async function signInWithEmail(email: string, password: string) {
@@ -25,4 +26,32 @@ export async function getCurrentUser() {
 
 export function onAuthStateChange(callback: Parameters<typeof supabase.auth.onAuthStateChange>[0]) {
   return supabase.auth.onAuthStateChange(callback)
+}
+
+export async function getProfile(userId: string): Promise<Profile | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single()
+  if (error) return null
+  return {
+    id: data.id,
+    name: data.name,
+    avatarUrl: data.avatar_url,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  }
+}
+
+export async function upsertProfile(userId: string, input: UpsertProfileInput): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .upsert({
+      id: userId,
+      ...(input.name !== undefined && { name: input.name }),
+      ...(input.avatarUrl !== undefined && { avatar_url: input.avatarUrl }),
+      updated_at: new Date().toISOString(),
+    })
+  if (error) throw error
 }

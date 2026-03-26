@@ -3,6 +3,10 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { BottomNavBar, NavTab } from './BottomNavBar'
 
+function isInRNApp(): boolean {
+  return typeof window !== 'undefined' && !!(window as any).ReactNativeWebView
+}
+
 function getActiveTab(pathname: string): NavTab {
   if (pathname === '/fridges' || pathname.startsWith('/fridges/')) return 'fridge'
   if (pathname.startsWith('/community')) return 'community'
@@ -27,6 +31,7 @@ export function BottomNavBarWrapper() {
   if (pathname.startsWith('/invite/')) return null
   if (pathname.startsWith('/login')) return null
   if (pathname.startsWith('/auth/')) return null
+  if (isInRNApp()) return null
 
   return <BottomNavBar activeTab={activeTab} onTabChange={handleTabChange} />
 }

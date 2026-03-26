@@ -2,8 +2,12 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 let _client: SupabaseClient | null = null
 
-export function initSupabase(url: string, key: string) {
-  _client = createClient(url, key)
+export function initSupabase(urlOrClient: string | SupabaseClient, key?: string) {
+  if (typeof urlOrClient === 'string') {
+    _client = createClient(urlOrClient, key!)
+  } else {
+    _client = urlOrClient
+  }
 }
 
 export function getSupabase(): SupabaseClient {

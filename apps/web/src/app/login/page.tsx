@@ -9,14 +9,14 @@ function LoginContent() {
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+  const getSiteUrl = () => process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
 
   const handleKakaoLogin = async () => {
     const supabase = createClient()
     await supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: {
-        redirectTo: `${siteUrl}/auth/callback`,
+        redirectTo: `${getSiteUrl()}/auth/callback`,
         scopes: 'profile_nickname profile_image',
       },
     })
@@ -27,7 +27,7 @@ function LoginContent() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${siteUrl}/auth/callback`,
+        redirectTo: `${getSiteUrl()}/auth/callback`,
       },
     })
   }

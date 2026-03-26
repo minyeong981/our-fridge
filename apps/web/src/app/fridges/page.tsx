@@ -2,43 +2,41 @@
 
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
-import { FridgeCard, FridgeCardProps } from '@/components/fridge-list/FridgeCard'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { FridgeCard } from '@/components/fridge-list/FridgeCard'
 import { FridgeFormPanel } from '@/components/fridges/FridgeFormPanel'
-
-const MOCK_FRIDGES: FridgeCardProps[] = [
-  {
-    id: '1',
-    name: '우리집 냉장고',
-    emoji: '🏠',
-    role: 'owner',
-    memberCount: 4,
-    itemCount: 12,
-    updatedAt: '조금 전',
-  },
-  {
-    id: '2',
-    name: '사무실 냉장고',
-    emoji: '🏢',
-    role: 'admin',
-    memberCount: 12,
-    itemCount: 5,
-    updatedAt: '1시간 전',
-  },
-  {
-    id: '3',
-    name: '여름 별장 펜트리',
-    emoji: '🏖️',
-    role: 'member',
-    memberCount: 3,
-    itemCount: 8,
-    updatedAt: '3일 전',
-  },
-]
+import { useAuth } from '@/contexts/AuthContext'
+import { getUserFridges } from '@our-fridge/api'
 
 export default function FridgesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const { user, loading: authLoading } = useAuth()
+  const queryClient = useQueryClient()
 
-  const isEmpty = MOCK_FRIDGES.length === 0
+  const { data: fridges = [], isLoading } = useQuery({
+    queryKey: ['user-fridges', user?.id],
+    queryFn: () => getUserFridges(user!.id),
+    enabled: !!user,
+  })
+
+  const fridgeCards = fridges.map((fridge) => ({
+    id: fridge.id,
+    emoji: fridge.emoji,
+    name: fridge.name,
+    role: fridge.role,
+    memberCount: fridge.memberCount,
+    itemCount: 0,
+  }))
+
+  const isEmpty = !isLoading && fridgeCards.length === 0
+
+  if (authLoading || isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    )
+  }
 
   return (
     <div className="h-full bg-neutral-50 flex flex-col overflow-hidden">
@@ -64,8 +62,17 @@ export default function FridgesPage() {
       ) : (
         <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="max-w-lg mx-auto w-full px-4 py-5 pb-24 flex flex-col gap-3">
-            {MOCK_FRIDGES.map((fridge) => (
-              <FridgeCard key={fridge.id} {...fridge} />
+            {fridgeCards.map((fridge) => (
+              <FridgeCard
+                key={fridge.id}
+                id={fridge.id}
+                emoji={fridge.emoji}
+                name={fridge.name}
+                role={fridge.role}
+                memberCount={fridge.memberCount}
+                itemCount={fridge.itemCount}
+                updatedAt=""
+              />
             ))}
           </div>
         </div>
@@ -81,7 +88,11 @@ export default function FridgesPage() {
         </button>
       )}
 
-      <FridgeFormPanel isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <FridgeFormPanel
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ['user-fridges', user?.id] })}
+      />
     </div>
   )
 }

@@ -1,25 +1,39 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { useMutation } from '@tanstack/react-query'
+import { updateFridge } from '@our-fridge/api'
 
 interface NoticeModalProps {
   isOpen: boolean
   onClose: () => void
+  fridgeId: string
+  onSuccess?: () => void
 }
 
 const MAX_LENGTH = 300
 
-export function NoticeModal({ isOpen, onClose }: NoticeModalProps) {
+export function NoticeModal({ isOpen, onClose, fridgeId, onSuccess }: NoticeModalProps) {
   const [content, setContent] = useState('')
 
+  useEffect(() => {
+    if (isOpen) setContent('')
+  }, [isOpen])
+
+  const { mutate: save, isPending } = useMutation({
+    mutationFn: () => updateFridge(fridgeId, { notice: content.trim() || null }),
+    onSuccess: () => {
+      onSuccess?.()
+      onClose()
+    },
+  })
+
   const handleSubmit = () => {
-    if (!content.trim()) return
-    // TODO: API 연동
-    setContent('')
-    onClose()
+    if (isPending) return
+    save()
   }
 
   const handleClose = () => {
@@ -74,8 +88,8 @@ export function NoticeModal({ isOpen, onClose }: NoticeModalProps) {
             </span>
           </div>
 
-          <PrimaryButton onClick={handleSubmit} disabled={!content.trim()}>
-            공지 올리기
+          <PrimaryButton onClick={handleSubmit} disabled={isPending}>
+            {isPending ? '저장 중...' : '공지 올리기'}
           </PrimaryButton>
         </div>
       </div>

@@ -7,6 +7,8 @@ import { FridgeDetailProvider } from '@/contexts/FridgeDetailContext'
 import { NotificationProvider } from '@/contexts/NotificationContext'
 import { NotificationPanel } from '@/components/layout/NotificationPanel'
 import { NotificationSettings } from '@/components/layout/NotificationSettings'
+import { PushPermissionSheet } from '@/components/layout/PushPermissionSheet'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 export const metadata: Metadata = {
   title: '우리의 냉장고',
@@ -17,18 +19,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko" suppressHydrationWarning>
       <body className="h-dvh overflow-hidden flex flex-col bg-background text-foreground">
-        <NotificationProvider>
-          <FridgeDetailProvider>
-            <HeaderWrapper />
-            <Providers>
-              <div className="flex-1 min-h-0 overflow-hidden">
-                {children}
-              </div>
-            </Providers>
-          </FridgeDetailProvider>
-          <NotificationPanel />
-          <NotificationSettings />
-        </NotificationProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <FridgeDetailProvider>
+              <HeaderWrapper />
+              <Providers>
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  {children}
+                </div>
+              </Providers>
+            </FridgeDetailProvider>
+            <NotificationPanel />
+            <NotificationSettings />
+            <PushPermissionSheet />
+          </NotificationProvider>
+        </AuthProvider>
         <BottomNavBarWrapper />
       </body>
     </html>

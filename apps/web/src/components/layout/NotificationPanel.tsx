@@ -24,12 +24,13 @@ const TYPE_ICON: Record<NotifType, React.ReactNode> = {
 
 export function NotificationPanel() {
   const router = useRouter()
-  const { notifications, isPanelOpen, closePanel, openSettings, deleteOne, deleteAll } =
+  const { notifications, isPanelOpen, closePanel, openSettings, markOneRead, deleteOne, deleteAll } =
     useNotification()
 
   if (!isPanelOpen) return null
 
-  const handleItemClick = (link?: string) => {
+  const handleItemClick = (id: string, link?: string) => {
+    markOneRead(id)
     if (!link) return
     closePanel()
     router.push(link)
@@ -49,13 +50,23 @@ export function NotificationPanel() {
             <ChevronLeft size={22} className="text-neutral-700" />
           </button>
           <h1 className="font-bold text-base text-neutral-800">알림</h1>
-          <button
-            onClick={openSettings}
-            aria-label="알림 설정"
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 transition-colors"
-          >
-            <Settings2 size={18} className="text-neutral-400" />
-          </button>
+          <div className="flex items-center gap-1">
+            {notifications.length > 0 && (
+              <button
+                onClick={deleteAll}
+                className="text-xs text-neutral-400 font-medium px-2 py-1 hover:text-red-400 transition-colors"
+              >
+                전체 삭제
+              </button>
+            )}
+            <button
+              onClick={openSettings}
+              aria-label="알림 설정"
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 transition-colors"
+            >
+              <Settings2 size={18} className="text-neutral-400" />
+            </button>
+          </div>
         </div>
 
         {/* 알림 목록 */}
@@ -67,45 +78,51 @@ export function NotificationPanel() {
             </div>
           ) : (
             <>
-              <ul className="divide-y">
+              <ul className="divide-y divide-neutral-100">
                 {notifications.map((n) => (
                   <li
                     key={n.id}
                     className={cn(
                       'flex items-start gap-3 px-5 py-4 transition-colors',
-                      !n.isRead && 'bg-orange-50',
+                      !n.isRead ? 'bg-primary-50' : 'bg-white',
                       n.link && 'cursor-pointer active:bg-neutral-50',
                     )}
-                    onClick={() => handleItemClick(n.link)}
+                    onClick={() => handleItemClick(n.id, n.link)}
                   >
-                    <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className={cn(
+                      'w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5',
+                      !n.isRead ? 'bg-white shadow-sm' : 'bg-neutral-100',
+                    )}>
                       {TYPE_ICON[n.type]}
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-neutral-800">{n.title}</p>
+                      <p className={cn(
+                        'text-xs text-neutral-800',
+                        !n.isRead ? 'font-bold' : 'font-medium',
+                      )}>
+                        {n.type === 'notice' && n.fridgeName
+                          ? `${n.fridgeName} 공지사항`
+                          : n.title}
+                      </p>
                       <p className="text-xs text-neutral-500 mt-0.5 leading-relaxed">{n.body}</p>
                       <p className="text-[11px] text-neutral-400 mt-1">{n.createdAt}</p>
                     </div>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        deleteOne(n.id)
-                      }}
-                      className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-neutral-200 transition-colors shrink-0 mt-0.5"
-                    >
-                      <X size={13} className="text-neutral-400" />
-                    </button>
+                    <div className="flex items-center shrink-0 mt-0.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          deleteOne(n.id)
+                        }}
+                        className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-neutral-200 transition-colors"
+                      >
+                        <X size={13} className="text-neutral-400" />
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={deleteAll}
-                className="w-full py-4 text-xs text-neutral-400 font-medium hover:text-red-400 transition-colors"
-              >
-                전체 삭제
-              </button>
             </>
           )}
         </div>

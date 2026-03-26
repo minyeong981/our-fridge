@@ -205,3 +205,40 @@ create policy "item_logs: 누구나 조회" on item_logs
 
 create policy "item_logs: 누구나 기록" on item_logs
   for insert with check (true);
+
+-- ─── Profiles ─────────────────────────────────────────────────────────────────
+
+create table profiles (
+  id          uuid primary key references auth.users(id) on delete cascade,
+  name        text,
+  avatar_url  text,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+alter table profiles enable row level security;
+
+create policy "profiles_select" on profiles for select using (true);
+create policy "profiles_update" on profiles for update using (auth.uid() = id);
+
+-- auto-create profile on signup
+create or replace function handle_new_user()
+returns trigger language plpgsql security definer as $$
+begin
+  insert into public.profiles (id, name, avatar_url)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+    new.raw_user_meta_data->>'avatar_url'
+  );
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure handle_new_user();
+
+-- ─── Fridges location migration ───────────────────────────────────────────────
+
+alter table fridges add column if not exists location text;

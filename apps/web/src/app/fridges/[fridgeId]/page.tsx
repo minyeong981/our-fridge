@@ -11,8 +11,10 @@ import {
   Link2,
   Settings,
   UserMinus,
+  User,
 } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { Member } from '@/components/fridges/MemberSheet'
 import { useFridgeDetail } from '@/contexts/FridgeDetailContext'
@@ -21,6 +23,16 @@ import { NoticeModal } from '@/components/fridges/NoticeModal'
 import { QrInviteModal } from '@/components/fridges/QrInviteModal'
 import { Toast } from '@/components/ui/Toast'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import {
+  getFridge,
+  deleteFridge,
+  getMembersByFridge,
+  removeMember,
+  updateFridge,
+  getItemsByFridge,
+} from '@our-fridge/api'
+import type { Item } from '@our-fridge/shared'
+import { useAuth } from '@/contexts/AuthContext'
 
 type StorageType = '전체' | '냉장' | '냉동'
 type SortType = '유통기한순' | '등록일순'
@@ -28,113 +40,17 @@ type SortType = '유통기한순' | '등록일순'
 const SIDE_PANEL_CHEVRON_SIZE = 14
 const SIDE_PANEL_CHEVRON_COLOR = 'text-neutral-300'
 
-function isNoticePermanentlyDismissed(id: string): boolean {
-  if (typeof window === 'undefined') return false
-  return localStorage.getItem(`notice_permanent_${id}`) === 'true'
+function getNoticeDismissKey(fridgeId: string) {
+  return `notice_dismissed_${fridgeId}`
 }
 
-function dismissNoticePermanent(id: string) {
-  localStorage.setItem(`notice_permanent_${id}`, 'true')
-}
-
-const MOCK_FRIDGE = { name: '거실 냉장고', location: '주방 • 402호' }
-const IS_ADMIN = true // TODO: 실제 권한으로 교체
-const MOCK_MEMBERS: Member[] = [
-  {
-    id: 'm1',
-    name: 'Sarah J.',
-    initial: 'S',
-    color: 'bg-primary-200 text-primary-700',
-    role: '관리자',
-    isMe: true,
-  },
-  {
-    id: 'm2',
-    name: 'Marcus L.',
-    initial: 'M',
-    color: 'bg-secondary-200 text-secondary-700',
-    role: '멤버',
-  },
-  {
-    id: 'm3',
-    name: '김민지',
-    initial: '민',
-    color: 'bg-tertiary-200 text-tertiary-700',
-    role: '멤버',
-  },
-  {
-    id: 'm4',
-    name: '이준호',
-    initial: '준',
-    color: 'bg-neutral-200 text-neutral-600',
-    role: '멤버',
-  },
-]
-
-const sortedMembers = [
-  ...MOCK_MEMBERS.filter((m) => m.isMe),
-  ...MOCK_MEMBERS.filter((m) => !m.isMe && m.role === '관리자'),
-  ...MOCK_MEMBERS.filter((m) => !m.isMe && m.role !== '관리자'),
-]
-const MOCK_NOTICES = [
-  { id: 'n1', text: '이번 주말 냉장고 청소 예정입니다! 모두 본인 음식은 미리 확인 부탁드립니다.' },
-]
-const MOCK_RULES = [
-  { id: 'r1', text: '개인 음식엔 꼭 이름을 써주세요' },
-  { id: 'r2', text: '유통기한 지난 음식은 바로 버려주세요' },
-  { id: 'r3', text: '매달 마지막 날은 냉장고 청소합니다' },
-]
-const MOCK_ITEMS = [
-  {
-    id: 'i1',
-    name: '유기농 갈라 사과',
-    emoji: '🍎',
-    addedBy: 'Sarah J.',
-    storageType: '냉장' as StorageType,
-    expiresIn: 2,
-    expiresAt: null,
-  },
-  {
-    id: 'i2',
-    name: '신선한 브로콜리',
-    emoji: '🥦',
-    addedBy: 'Marcus L.',
-    storageType: '냉장' as StorageType,
-    expiresIn: null,
-    expiresAt: '2023. 12. 28',
-  },
-  {
-    id: 'i3',
-    name: '버터',
-    emoji: '🧈',
-    addedBy: 'Sarah J.',
-    storageType: '냉장' as StorageType,
-    expiresIn: 30,
-    expiresAt: null,
-  },
-  {
-    id: 'i4',
-    name: '냉동 만두',
-    emoji: '🥟',
-    addedBy: 'Marcus L.',
-    storageType: '냉동' as StorageType,
-    expiresIn: 60,
-    expiresAt: null,
-  },
-  {
-    id: 'i5',
-    name: '참기름',
-    emoji: '🫙',
-    addedBy: 'Sarah J.',
-    storageType: '상온' as StorageType,
-    expiresIn: 90,
-    expiresAt: null,
-  },
-]
+const DAYS_EXPIRY_SOON = 3
 
 export default function FridgeDetailPage() {
   const router = useRouter()
   const { fridgeId } = useParams<{ fridgeId: string }>()
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
   const [storageFilter, setStorageFilter] = useState<StorageType>('전체')
   const [sortBy, setSortBy] = useState<SortType>('유통기한순')
   const [isSortOpen, setIsSortOpen] = useState(false)
@@ -142,17 +58,101 @@ export default function FridgeDetailPage() {
     useFridgeDetail()
   const [isRulesOpen, setIsRulesOpen] = useState(false)
   const [isNoticeExpanded, setIsNoticeExpanded] = useState(false)
-  const [dismissedNoticeIds, setDismissedNoticeIds] = useState<Set<string>>(new Set())
+  const [noticeFolded, setNoticeFolded] = useState(() => {
+    if (typeof globalThis.window === 'undefined') return false
+    return globalThis.window.sessionStorage.getItem(`notice_folded_${fridgeId}`) === 'true'
+  })
+  const [noticeDismissed, setNoticeDismissed] = useState(() => {
+    if (typeof globalThis.window === 'undefined') return false
+    return globalThis.window.localStorage.getItem(getNoticeDismissKey(fridgeId)) === 'true'
+  })
   const [isFridgeSettingsPanelOpen, setIsFridgeSettingsPanelOpen] = useState(false)
   const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(false)
+  const [isReplaceNoticeConfirmOpen, setIsReplaceNoticeConfirmOpen] = useState(false)
+  const [isRemoveNoticeConfirmOpen, setIsRemoveNoticeConfirmOpen] = useState(false)
   const [isQrModalOpen, setIsQrModalOpen] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [memberToRemove, setMemberToRemove] = useState<Member | null>(null)
 
-  const inviteUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/invite/MOCK_CODE_${fridgeId}`
-      : `https://ourfridge.app/invite/MOCK_CODE_${fridgeId}`
+  const { data: fridge } = useQuery({
+    queryKey: ['fridge', fridgeId],
+    queryFn: () => getFridge(fridgeId),
+    enabled: !!fridgeId,
+  })
+
+  const { data: items = [] } = useQuery({
+    queryKey: ['items', fridgeId],
+    queryFn: () => getItemsByFridge(fridgeId),
+    enabled: !!fridgeId,
+  })
+
+  const { data: rawMembers = [] } = useQuery({
+    queryKey: ['members', fridgeId],
+    queryFn: () => getMembersByFridge(fridgeId),
+    enabled: !!fridgeId,
+  })
+
+  const myMembership = rawMembers.find((m) => m.userId === user?.id)
+  const isAdmin = myMembership?.role === 'owner' || myMembership?.role === 'admin'
+
+  const members: Member[] = rawMembers.map((m) => ({
+    id: m.id,
+    name: m.name ?? m.userId,
+    avatarUrl: m.avatarUrl,
+    role: m.role === 'owner' || m.role === 'admin' ? '관리자' : '멤버',
+    isMe: m.userId === user?.id,
+  }))
+
+  const sortedMembers = [
+    ...members.filter((m) => m.isMe),
+    ...members.filter((m) => !m.isMe && m.role === '관리자'),
+    ...members.filter((m) => !m.isMe && m.role !== '관리자'),
+  ]
+
+  const { mutate: removeNotice } = useMutation({
+    mutationFn: () => updateFridge(fridgeId, { notice: null }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fridge', fridgeId] })
+      setNoticeFolded(false)
+      setNoticeDismissed(false)
+      globalThis.window?.sessionStorage.removeItem(`notice_folded_${fridgeId}`)
+      globalThis.window?.localStorage.removeItem(getNoticeDismissKey(fridgeId))
+    },
+  })
+
+  const handleOpenNoticeModal = () => {
+    // 공지가 이미 있고 사용자가 아직 보고 있는 상태면 확인 모달
+    if (fridge?.notice && !noticeDismissed) {
+      setIsReplaceNoticeConfirmOpen(true)
+    } else {
+      setIsNoticeModalOpen(true)
+    }
+  }
+
+  const { mutate: handleRemoveMember } = useMutation({
+    mutationFn: (memberId: string) => {
+      const m = rawMembers.find((rm) => rm.id === memberId)
+      if (!m) throw new Error('멤버를 찾을 수 없어요')
+      return removeMember(fridgeId, m.userId)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members', fridgeId] })
+      setMemberToRemove(null)
+    },
+  })
+
+  const { mutate: handleDelete } = useMutation({
+    mutationFn: () => deleteFridge(fridgeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-fridges'] })
+      router.push('/fridges')
+    },
+  })
+
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (typeof window !== 'undefined' ? window.location.origin : '')
+  const inviteUrl = `${siteUrl}/invite/MOCK_CODE_${fridgeId}`
 
   const handleCopyLink = async () => {
     setIsSidePanelOpen(false)
@@ -179,26 +179,35 @@ export default function FridgeDetailPage() {
   }
 
   useEffect(() => {
-    setFridgeName(MOCK_FRIDGE.name)
-    setFridgeLocation(MOCK_FRIDGE.location)
-  }, [setFridgeName, setFridgeLocation])
+    if (fridge) {
+      setFridgeName(fridge.name)
+      setFridgeLocation(fridge.location ?? '')
+    }
+  }, [fridge, setFridgeName, setFridgeLocation])
 
-  useEffect(() => {
-    const hidden = new Set(
-      MOCK_NOTICES.filter((n) => isNoticePermanentlyDismissed(n.id)).map((n) => n.id),
-    )
-    setDismissedNoticeIds(hidden)
-  }, [])
+  const hasNotice = !!fridge?.notice && !noticeDismissed && !noticeFolded
 
-  const visibleNotices = MOCK_NOTICES.filter((n) => !dismissedNoticeIds.has(n.id))
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const sortedItems = [...items].sort((a, b) => {
+    if (sortBy === '유통기한순') {
+      if (!a.expireDate && !b.expireDate) return 0
+      if (!a.expireDate) return 1
+      if (!b.expireDate) return -1
+      return a.expireDate.localeCompare(b.expireDate)
+    }
+    return b.createdAt.localeCompare(a.createdAt)
+  })
+
   const filteredItems =
     storageFilter === '전체'
-      ? MOCK_ITEMS
-      : MOCK_ITEMS.filter((i) => i.storageType === storageFilter)
+      ? sortedItems
+      : sortedItems.filter((i) => i.storageType === storageFilter)
 
   const handleDismissPermanent = () => {
-    visibleNotices.forEach((n) => dismissNoticePermanent(n.id))
-    setDismissedNoticeIds((prev) => new Set([...prev, ...visibleNotices.map((n) => n.id)]))
+    globalThis.window?.localStorage.setItem(getNoticeDismissKey(fridgeId), 'true')
+    setNoticeDismissed(true)
     setIsNoticeExpanded(false)
   }
 
@@ -230,7 +239,7 @@ export default function FridgeDetailPage() {
         <div className="absolute inset-0 overflow-y-auto">
           <div className="max-w-lg mx-auto w-full flex flex-col gap-2 pt-4 pb-24">
             {/* 공지 — 드롭다운 아코디언 */}
-            {visibleNotices.length > 0 && (
+            {hasNotice && (
               <div className="mx-4">
                 <button
                   onClick={() => setIsNoticeExpanded((v) => !v)}
@@ -243,7 +252,7 @@ export default function FridgeDetailPage() {
                 >
                   <Megaphone size={14} className="text-primary-400 shrink-0" />
                   <p className="flex-1 text-sm text-neutral-700 line-clamp-1 leading-snug min-w-0">
-                    {visibleNotices[0].text}
+                    {fridge!.notice}
                   </p>
                   <ChevronDown
                     size={13}
@@ -259,17 +268,51 @@ export default function FridgeDetailPage() {
                       onClick={handleDismissPermanent}
                       className="flex-1 py-2.5 text-xs font-semibold text-neutral-400 bg-primary-50 hover:bg-primary-100 transition-colors"
                     >
-                      다시 열지 않음
+                      다시 안 보기
                     </button>
                     <div className="w-px bg-primary-200" />
                     <button
-                      onClick={() => setIsNoticeExpanded(false)}
+                      onClick={() => {
+                        globalThis.window?.sessionStorage.setItem(
+                          `notice_folded_${fridgeId}`,
+                          'true',
+                        )
+                        setNoticeFolded(true)
+                        setIsNoticeExpanded(false)
+                      }}
                       className="flex-1 py-2.5 text-xs font-semibold text-primary-500 bg-primary-50 hover:bg-primary-100 transition-colors"
                     >
                       접어두기
                     </button>
+                    {isAdmin && (
+                      <>
+                        <div className="w-px bg-primary-200" />
+                        <button
+                          onClick={() => setIsRemoveNoticeConfirmOpen(true)}
+                          className="flex-1 py-2.5 text-xs font-semibold text-red-400 bg-primary-50 hover:bg-red-50 transition-colors"
+                        >
+                          제거하기
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* 접힌 공지 복원 버튼 */}
+            {noticeFolded && fridge?.notice && (
+              <div className="px-4">
+                <button
+                  onClick={() => {
+                    globalThis.window?.sessionStorage.removeItem(`notice_folded_${fridgeId}`)
+                    setNoticeFolded(false)
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary-50 text-primary-500 border border-primary-200"
+                >
+                  <Megaphone size={11} />
+                  공지 보기
+                </button>
               </div>
             )}
 
@@ -325,15 +368,31 @@ export default function FridgeDetailPage() {
             </div>
 
             {/* 음식 목록 */}
-            <div className="flex flex-col gap-3 px-4">
-              {filteredItems.length === 0 ? (
-                <p className="text-center text-sm text-neutral-400 py-8">음식이 없습니다</p>
-              ) : (
-                filteredItems.map((item) => (
-                  <FridgeItemCard key={item.id} {...item} fridgeId={fridgeId} />
-                ))
-              )}
-            </div>
+            {filteredItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-3 px-4 text-center min-h-[55vh]">
+                <div className="text-5xl">🥪</div>
+                <div>
+                  <p className="font-bold text-neutral-700 text-base">아직 저장된 음식이 없어요</p>
+                  <p className="text-sm text-neutral-400 mt-1">
+                    음식을 추가하고
+                    <br />
+                    유통기한을 함께 관리해보세요
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 px-4">
+                {filteredItems.map((item) => (
+                  <FridgeItemCard
+                    key={item.id}
+                    item={item}
+                    fridgeId={fridgeId}
+                    today={today}
+                    registeredByName={rawMembers.find((m) => m.userId === item.registeredBy)?.name ?? null}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -376,20 +435,31 @@ export default function FridgeDetailPage() {
                 />
               </button>
               {isRulesOpen && (
-                <div className="mt-1 mb-3 rounded-2xl border border-neutral-100 bg-neutral-50 px-4 py-3 flex flex-col gap-2.5">
-                  {MOCK_RULES.map((r, i) => (
-                    <div key={r.id} className="flex items-start gap-2 text-sm text-neutral-700">
-                      <span className="text-neutral-400 font-bold shrink-0 text-xs mt-0.5">
-                        {i + 1}.
-                      </span>
-                      <span>{r.text}</span>
+                <div className="mt-1 mb-3 rounded-2xl border border-neutral-100 bg-neutral-50 px-4 py-3">
+                  {fridge?.rules ? (
+                    <div className="flex flex-col gap-2.5">
+                      {fridge.rules
+                        .split('\n')
+                        .filter(Boolean)
+                        .map((line, i) => (
+                          <div key={i} className="flex items-start gap-2 text-sm text-neutral-700">
+                            <span className="text-neutral-400 font-bold shrink-0 text-xs mt-0.5">
+                              {i + 1}.
+                            </span>
+                            <span>{line}</span>
+                          </div>
+                        ))}
                     </div>
-                  ))}
+                  ) : (
+                    <p className="text-sm text-neutral-400 text-center py-1">
+                      등록된 규칙이 없어요
+                    </p>
+                  )}
                 </div>
               )}
             </div>
             {/* 관리자 섹션 */}
-            {IS_ADMIN && (
+            {isAdmin && (
               <>
                 <div className="h-px mx-5 my-1" />
                 <div className="px-5">
@@ -397,7 +467,7 @@ export default function FridgeDetailPage() {
                     관리
                   </p>
                   <button
-                    onClick={() => setIsNoticeModalOpen(true)}
+                    onClick={handleOpenNoticeModal}
                     className="w-full flex items-center gap-3 py-3 text-sm font-semibold text-neutral-700 hover:text-primary transition-colors text-left"
                   >
                     <Megaphone size={16} className="text-neutral-400 shrink-0" />
@@ -412,7 +482,10 @@ export default function FridgeDetailPage() {
                   >
                     <Settings size={16} className="text-neutral-400 shrink-0" />
                     <span className="flex-1">냉장고 설정</span>
-                    <ChevronRight size={SIDE_PANEL_CHEVRON_SIZE} className={`${SIDE_PANEL_CHEVRON_COLOR} shrink-0`} />
+                    <ChevronRight
+                      size={SIDE_PANEL_CHEVRON_SIZE}
+                      className={`${SIDE_PANEL_CHEVRON_COLOR} shrink-0`}
+                    />
                   </button>
                 </div>
               </>
@@ -424,7 +497,7 @@ export default function FridgeDetailPage() {
             <div className="px-5 pt-3">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
-                  멤버 {MOCK_MEMBERS.length}명
+                  멤버 {members.length}명
                 </p>
                 <div className="flex gap-1">
                   <button
@@ -444,13 +517,16 @@ export default function FridgeDetailPage() {
               <ul className="flex flex-col">
                 {sortedMembers.map((m) => (
                   <li key={m.id} className="flex items-center gap-3 py-3">
-                    <div
-                      className={cn(
-                        'w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shrink-0',
-                        m.color,
+                    <div className="w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center shrink-0">
+                      {m.avatarUrl ? (
+                        <img
+                          src={m.avatarUrl}
+                          alt={m.name}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <User size={14} className="text-primary" />
                       )}
-                    >
-                      {m.initial}
                     </div>
                     <p className="flex-1 font-semibold text-sm text-neutral-800">
                       {m.name}
@@ -463,7 +539,7 @@ export default function FridgeDetailPage() {
                         관리자
                       </span>
                     )}
-                    {IS_ADMIN && !m.isMe && m.role !== '관리자' && (
+                    {isAdmin && !m.isMe && m.role !== '관리자' && (
                       <button
                         onClick={() => setMemberToRemove(m)}
                         className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-red-50 transition-colors"
@@ -487,11 +563,49 @@ export default function FridgeDetailPage() {
         추가
       </button>
 
-      <NoticeModal isOpen={isNoticeModalOpen} onClose={() => setIsNoticeModalOpen(false)} />
+      <NoticeModal
+        isOpen={isNoticeModalOpen}
+        onClose={() => setIsNoticeModalOpen(false)}
+        fridgeId={fridgeId}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['fridge', fridgeId] })
+          setIsSidePanelOpen(false)
+          setNoticeFolded(false)
+          setNoticeDismissed(false)
+          globalThis.window?.sessionStorage.removeItem(`notice_folded_${fridgeId}`)
+          globalThis.window?.localStorage.removeItem(getNoticeDismissKey(fridgeId))
+        }}
+      />
+
+      <ConfirmModal
+        isOpen={isReplaceNoticeConfirmOpen}
+        title="공지를 교체할까요?"
+        description="기존 공지가 새 공지로 대체돼요."
+        confirmLabel="작성하기"
+        onConfirm={() => {
+          setIsReplaceNoticeConfirmOpen(false)
+          setIsNoticeModalOpen(true)
+        }}
+        onCancel={() => setIsReplaceNoticeConfirmOpen(false)}
+      />
+
+      <ConfirmModal
+        isOpen={isRemoveNoticeConfirmOpen}
+        title="공지를 제거할까요?"
+        description="모든 멤버에게 공지가 사라져요."
+        confirmLabel="제거하기"
+        onConfirm={() => {
+          setIsRemoveNoticeConfirmOpen(false)
+          setIsNoticeExpanded(false)
+          removeNotice()
+        }}
+        onCancel={() => setIsRemoveNoticeConfirmOpen(false)}
+        destructive
+      />
 
       {isQrModalOpen && (
         <QrInviteModal
-          fridgeName={MOCK_FRIDGE.name}
+          fridgeName={fridge?.name ?? ''}
           inviteUrl={inviteUrl}
           onClose={() => setIsQrModalOpen(false)}
         />
@@ -505,77 +619,103 @@ export default function FridgeDetailPage() {
         description="멤버를 냉장고에서 제거하면 더 이상 접근할 수 없게 돼요."
         confirmLabel="내보내기"
         onConfirm={() => {
-          /* 멤버 제거 처리 */
-          setMemberToRemove(null)
+          if (memberToRemove) handleRemoveMember(memberToRemove.id)
         }}
         onCancel={() => setMemberToRemove(null)}
         destructive
       />
 
-      <FridgeFormPanel
-        isOpen={isFridgeSettingsPanelOpen}
-        onClose={() => setIsFridgeSettingsPanelOpen(false)}
-        initialData={{
-          emoji: '🧊',
-          name: MOCK_FRIDGE.name,
-          location: MOCK_FRIDGE.location,
-          memo: '',
-          rules: MOCK_RULES.map((r) => r.text).join('\n'),
-        }}
-        onDelete={() => {
-          /* TODO: 냉장고 삭제 처리 후 라우팅 */
-          setIsFridgeSettingsPanelOpen(false)
-        }}
-      />
+      {fridge && (
+        <FridgeFormPanel
+          isOpen={isFridgeSettingsPanelOpen}
+          onClose={() => setIsFridgeSettingsPanelOpen(false)}
+          fridgeId={fridgeId}
+          initialData={{
+            emoji: fridge.emoji,
+            name: fridge.name,
+            location: fridge.location ?? '',
+            memo: fridge.description ?? '',
+            rules: fridge.rules ?? '',
+          }}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['fridge', fridgeId] })
+            queryClient.invalidateQueries({ queryKey: ['user-fridges'] })
+          }}
+          onDelete={() => {
+            setIsFridgeSettingsPanelOpen(false)
+            handleDelete()
+          }}
+        />
+      )}
     </div>
   )
 }
 
 function FridgeItemCard({
-  id,
+  item,
   fridgeId,
-  name,
-  emoji,
-  addedBy,
-  expiresIn,
-  expiresAt,
+  today,
+  registeredByName,
 }: {
-  id: string
+  item: Item
   fridgeId: string
-  name: string
-  emoji: string
-  addedBy: string
-  expiresIn: number | null
-  expiresAt: string | null
+  today: Date
+  registeredByName?: string | null
 }) {
   const router = useRouter()
-  const isExpiringSoon = expiresIn !== null && expiresIn <= 3
+
+  const expireDate = item.expireDate ? new Date(item.expireDate) : null
+  const daysLeft = expireDate
+    ? Math.floor((expireDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    : null
+  const isExpiringSoon = daysLeft !== null && daysLeft <= DAYS_EXPIRY_SOON
+  const isExpired = daysLeft !== null && daysLeft < 0
+
+  const fmt = (d: Date) =>
+    `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+
   return (
     <div
-      onClick={() => router.push(`/fridges/${fridgeId}/items/${id}`)}
-      className="flex items-center gap-3 bg-white rounded-2xl px-4 py-4 shadow-sm border border-neutral-100 cursor-pointer active:bg-neutral-50 transition-colors"
+      onClick={() => router.push(`/fridges/${fridgeId}/items/${item.id}`)}
+      className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 shadow-sm border border-neutral-100 cursor-pointer active:bg-neutral-50 transition-colors"
     >
-      <div className="w-11 h-11 rounded-xl bg-neutral-50 flex items-center justify-center text-2xl shrink-0">
-        {emoji}
+      <div className="w-14 h-14 rounded-xl bg-neutral-50 flex items-center justify-center shrink-0 overflow-hidden">
+        {item.imageUrl ? (
+          <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-2xl">🧊</span>
+        )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="font-bold text-neutral-800 text-sm truncate">{name}</p>
-          {isExpiringSoon && (
+        <div className="flex items-center gap-2 mb-0.5">
+          <p className="font-bold text-neutral-800 text-sm truncate">{item.name}</p>
+          {isExpired && (
+            <span className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-500">
+              기한 초과
+            </span>
+          )}
+          {!isExpired && isExpiringSoon && (
             <span className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600">
               만료 임박
             </span>
           )}
         </div>
-        <p className="text-xs text-neutral-400 mt-0.5">{addedBy}</p>
-        <p
-          className={cn(
-            'text-xs mt-0.5 font-medium',
-            isExpiringSoon ? 'text-amber-500' : 'text-neutral-400',
-          )}
-        >
-          {expiresIn !== null ? `남은 기한: ${expiresIn}일` : `유통기한: ${expiresAt}`}
-        </p>
+        {expireDate ? (
+          <p className={cn(
+            'text-xs font-medium',
+            isExpired ? 'text-red-400' : isExpiringSoon ? 'text-amber-500' : 'text-neutral-400',
+          )}>
+            {fmt(expireDate)}
+            <span className="ml-1.5 opacity-70">
+              {isExpired ? `(${Math.abs(daysLeft!)}일 초과)` : `(D-${daysLeft})`}
+            </span>
+          </p>
+        ) : (
+          <p className="text-xs text-neutral-300 font-medium">유통기한 없음</p>
+        )}
+        {registeredByName && (
+          <p className="text-[11px] text-neutral-300 mt-0.5">{registeredByName}님이 등록함</p>
+        )}
       </div>
     </div>
   )

@@ -34,8 +34,12 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/auth/') ||
     pathname.startsWith('/invite/')
 
+  // RN 앱 WebView는 세션을 클라이언트 주입 방식으로 처리 — 서버 리다이렉트 건너뜀
+  const userAgent = request.headers.get('user-agent') ?? ''
+  const isRNWebView = userAgent.includes('OurFridgeApp')
+
   // 로그인 안 됐는데 보호된 경로 접근 → 로그인으로
-  if (!user && !isPublicPath) {
+  if (!user && !isPublicPath && !isRNWebView) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

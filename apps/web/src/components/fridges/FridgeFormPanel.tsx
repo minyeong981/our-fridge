@@ -1,12 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronLeft, Trash2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { ChevronLeft, Trash2, Refrigerator } from 'lucide-react'
+import { useMutation } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { FormField } from '@/components/ui/FormField'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import { useAuth } from '@/contexts/AuthContext'
+import { createFridge, updateFridge, addMember } from '@our-fridge/api'
 
-const EMOJI_OPTIONS = ['🧊', '🏠', '🏢', '🥬', '🍊', '🌿', '⭐', '🏖️', '🍕', '❤️']
+const EMOJI_OPTIONS = ['🧊', '🏠', '🏢', '🥬', '🍊', '🌿', '⭐', '🏖️', '🍕', '❤️', '🍱']
 
 const MAX_NAME_LENGTH = 10
 const MAX_LOCATION_LENGTH = 10
@@ -16,7 +20,7 @@ const MEMO_ROWS = 2
 const RULES_ROWS = 6
 
 interface FridgeFormData {
-  emoji: string
+  emoji: string | null
   name: string
   location: string
   memo: string
@@ -26,25 +30,57 @@ interface FridgeFormData {
 interface FridgeFormPanelProps {
   isOpen: boolean
   onClose: () => void
+  onSuccess?: () => void
   initialData?: FridgeFormData
+  fridgeId?: string
   onDelete?: () => void
 }
 
-export function FridgeFormPanel({ isOpen, onClose, initialData, onDelete }: FridgeFormPanelProps) {
+export function FridgeFormPanel({ isOpen, onClose, onSuccess, initialData, fridgeId, onDelete }: FridgeFormPanelProps) {
   const isEditMode = !!initialData
-  const [selectedEmoji, setSelectedEmoji] = useState(initialData?.emoji ?? '🧊')
+  const { user } = useAuth()
+  const router = useRouter()
+  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(initialData?.emoji ?? null)
   const [name, setName] = useState(initialData?.name ?? '')
   const [location, setLocation] = useState(initialData?.location ?? '')
   const [memo, setMemo] = useState(initialData?.memo ?? '')
   const [rules, setRules] = useState(initialData?.rules ?? '')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
+  const { mutate: save, isPending } = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('로그인이 필요해요')
+      if (isEditMode && fridgeId) {
+        return updateFridge(fridgeId, {
+          name: name.trim(),
+          emoji: selectedEmoji,
+          location: location.trim() || null,
+          description: memo.trim() || null,
+          rules: rules.trim() || null,
+        })
+      }
+      const fridge = await createFridge({
+        name: name.trim(),
+        emoji: selectedEmoji,
+        location: location.trim() || null,
+        description: memo.trim() || null,
+        rules: rules.trim() || null,
+      })
+      await addMember(fridge.id, user.id, 'owner')
+      return fridge
+    },
+    onSuccess: () => {
+      onSuccess?.()
+      onClose()
+      if (!isEditMode) router.push('/fridges')
+    },
+  })
+
   if (!isOpen) return null
 
   const handleSave = () => {
-    if (!name.trim()) return
-    // TODO: API 연동
-    onClose()
+    if (!name.trim() || isPending) return
+    save()
   }
 
   return (
@@ -62,10 +98,10 @@ export function FridgeFormPanel({ isOpen, onClose, initialData, onDelete }: Frid
         </h1>
         <button
           onClick={handleSave}
-          disabled={!name.trim()}
+          disabled={!name.trim() || isPending}
           className="text-sm font-bold text-primary disabled:text-neutral-300 transition-colors"
         >
-          {isEditMode ? '저장' : '추가'}
+          {isPending ? '저장 중...' : isEditMode ? '저장' : '추가'}
         </button>
       </div>
 
@@ -75,13 +111,25 @@ export function FridgeFormPanel({ isOpen, onClose, initialData, onDelete }: Frid
           {/* 아이콘 */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-semibold text-neutral-700">냉장고 아이콘</label>
-            <div className="flex gap-2 flex-wrap">
+            <div className="grid grid-cols-6 gap-2">
+              {/* 선택 안 함 */}
+              <button
+                onClick={() => setSelectedEmoji(null)}
+                className={cn(
+                  'aspect-square rounded-xl flex items-center justify-center transition-all',
+                  selectedEmoji === null
+                    ? 'bg-primary-100 ring-2 ring-primary'
+                    : 'bg-neutral-100 hover:bg-neutral-200',
+                )}
+              >
+                <Refrigerator size={20} className={selectedEmoji === null ? 'text-primary' : 'text-neutral-400'} />
+              </button>
               {EMOJI_OPTIONS.map((emoji) => (
                 <button
                   key={emoji}
                   onClick={() => setSelectedEmoji(emoji)}
                   className={cn(
-                    'w-11 h-11 rounded-xl text-2xl flex items-center justify-center transition-all',
+                    'aspect-square rounded-xl text-2xl flex items-center justify-center transition-all',
                     selectedEmoji === emoji
                       ? 'bg-primary-100 ring-2 ring-primary'
                       : 'bg-neutral-100 hover:bg-neutral-200',

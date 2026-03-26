@@ -8,22 +8,16 @@ import {
   Megaphone,
   FileText,
   Info,
-  Globe,
   Moon,
   LogOut,
   UserX,
   ChevronRight,
   FileEdit,
+  User,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
-
-const ME = {
-  name: '김민지',
-  initial: '민',
-  color: 'bg-primary-100 text-primary-600',
-  email: 'minzi@example.com',
-}
+import { useAuth } from '@/contexts/AuthContext'
 
 const THEME_LABEL: Record<string, string> = {
   light: '라이트',
@@ -34,6 +28,7 @@ const THEME_LABEL: Record<string, string> = {
 export default function MyPage() {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
+  const { user, profile } = useAuth()
   const [language, setLanguage] = useState<'ko' | 'en' | 'zh' | 'ja'>('ko')
   const [showLangSheet, setShowLangSheet] = useState(false)
   const [showThemeSheet, setShowThemeSheet] = useState(false)
@@ -43,17 +38,16 @@ export default function MyPage() {
     <div className="h-full bg-neutral-50 overflow-y-auto">
       {/* 프로필 */}
       <div className="bg-white px-5 pt-6 pb-5 flex items-center gap-4">
-        <div
-          className={cn(
-            'w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold shrink-0',
-            ME.color,
-          )}
-        >
-          {ME.initial}
-        </div>
+        {profile?.avatarUrl ? (
+          <img src={profile.avatarUrl} alt="프로필" className="w-10 h-10 rounded-full object-cover shrink-0" />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center shrink-0">
+            <User size={18} className="text-primary" />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-base text-neutral-900">{ME.name}</p>
-          <p className="text-xs text-neutral-400 mt-0.5 truncate">{ME.email}</p>
+          <p className="font-bold text-base text-neutral-900">{profile?.name ?? '사용자'}</p>
+          <p className="text-xs text-neutral-400 mt-0.5 truncate">{user?.email ?? ''}</p>
         </div>
       </div>
 
@@ -88,8 +82,8 @@ export default function MyPage() {
           <ChevronRight size={14} className="text-neutral-300" />
         </button>
 
-        {/* 언어 설정 */}
-        <button
+        {/* TODO: 언어 설정 */}
+        {/* <button
           onClick={() => setShowLangSheet(true)}
           className="w-full flex items-center gap-3 px-5 py-4"
         >
@@ -99,7 +93,7 @@ export default function MyPage() {
             {{ ko: '한국어', en: 'English', zh: '中文', ja: '日本語' }[language]}
           </span>
           <ChevronRight size={14} className="text-neutral-300" />
-        </button>
+        </button> */}
       </div>
 
       {/* 정보 */}

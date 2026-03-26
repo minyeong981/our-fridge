@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import {
   ChevronLeft,
   Bell,
@@ -15,6 +14,7 @@ import {
   ShieldAlert,
 } from 'lucide-react'
 import { useNotification } from '@/contexts/NotificationContext'
+import type { NotifSettings } from '@/contexts/NotificationContext'
 import { cn } from '@/lib/utils'
 
 interface ToggleRowProps {
@@ -70,22 +70,23 @@ function SectionLabel({ title }: { title: string }) {
   )
 }
 
-export function NotificationSettings() {
-  const { isSettingsOpen, closeSettings } = useNotification()
+function postToRN(data: object) {
+  if (typeof window !== 'undefined' && (window as any).ReactNativeWebView) {
+    ;(window as any).ReactNativeWebView.postMessage(JSON.stringify(data))
+  }
+}
 
-  const [master, setMaster] = useState(true)
-  const [fridgeExpiry, setFridgeExpiry] = useState(true)
-  const [fridgeNotice, setFridgeNotice] = useState(true)
-  const [fridgeInvite, setFridgeInvite] = useState(true)
-  const [communityMyPostComment, setCommunityMyPostComment] = useState(true)
-  const [communityMyComment, setCommunityMyComment] = useState(true)
-  const [communityLikedPost, setCommunityLikedPost] = useState(false)
-  const [communityShare, setCommunityShare] = useState(true)
-  const [communityReport, setCommunityReport] = useState(true)
+export function NotificationSettings() {
+  const { isSettingsOpen, closeSettings, settings, updateSettings } = useNotification()
 
   if (!isSettingsOpen) return null
 
+  const { master } = settings
   const off = !master
+
+  function toggle(key: keyof NotifSettings) {
+    updateSettings({ [key]: !settings[key] })
+  }
 
   return (
     <div className="fixed inset-0 bg-white z-[202] flex flex-col">
@@ -106,16 +107,16 @@ export function NotificationSettings() {
         {/* 전체 알림 마스터 토글 */}
         <div className="mx-4 mt-4 bg-white rounded-2xl overflow-hidden shadow-sm">
           <button
-            onClick={() => setMaster((v) => !v)}
+            onClick={() => toggle('master')}
             className="w-full flex items-center gap-4 px-5 py-5 active:bg-neutral-50 transition-colors"
           >
             <div
               className={cn(
                 'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-200',
-                master ? 'bg-primary-100' : 'bg-neutral-100',
+                settings.master ? 'bg-primary-100' : 'bg-neutral-100',
               )}
             >
-              {master ? (
+              {settings.master ? (
                 <Bell size={20} className="text-primary" />
               ) : (
                 <BellOff size={20} className="text-neutral-400" />
@@ -123,20 +124,20 @@ export function NotificationSettings() {
             </div>
             <div className="flex-1 text-left">
               <p className="text-sm font-bold text-neutral-900">전체 알림</p>
-              <p className={cn('text-xs mt-0.5', master ? 'text-primary' : 'text-neutral-400')}>
-                {master ? '알림을 받고 있어요' : '모든 알림이 꺼져 있어요'}
+              <p className={cn('text-xs mt-0.5', settings.master ? 'text-primary' : 'text-neutral-400')}>
+                {settings.master ? '알림을 받고 있어요' : '모든 알림이 꺼져 있어요'}
               </p>
             </div>
             <div
               className={cn(
                 'relative w-12 h-7 rounded-full transition-colors duration-200 shrink-0',
-                master ? 'bg-primary' : 'bg-neutral-200',
+                settings.master ? 'bg-primary' : 'bg-neutral-200',
               )}
             >
               <span
                 className={cn(
                   'absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-200',
-                  master ? 'left-[26px]' : 'left-1',
+                  settings.master ? 'left-[26px]' : 'left-1',
                 )}
               />
             </div>
@@ -157,24 +158,24 @@ export function NotificationSettings() {
             icon={<CalendarClock size={18} className="text-amber-500" />}
             label="유통기한 임박"
             description="만료 3일 전부터 알려드려요"
-            checked={fridgeExpiry}
-            onChange={setFridgeExpiry}
+            checked={settings.fridgeExpiry}
+            onChange={() => toggle('fridgeExpiry')}
             disabled={off}
           />
           <ToggleRow
             icon={<Megaphone size={18} className="text-primary" />}
             label="규칙 · 공지 변경"
             description="냉장고 규칙이나 공지가 바뀌면 알려드려요"
-            checked={fridgeNotice}
-            onChange={setFridgeNotice}
+            checked={settings.fridgeNotice}
+            onChange={() => toggle('fridgeNotice')}
             disabled={off}
           />
           <ToggleRow
             icon={<UserPlus size={18} className="text-green-500" />}
             label="새 멤버 합류"
             description="새로운 멤버가 초대받으면 알려드려요"
-            checked={fridgeInvite}
-            onChange={setFridgeInvite}
+            checked={settings.fridgeInvite}
+            onChange={() => toggle('fridgeInvite')}
             disabled={off}
           />
         </div>
@@ -185,42 +186,54 @@ export function NotificationSettings() {
             icon={<MessageSquare size={18} className="text-blue-500" />}
             label="내 게시글 댓글 · 답글"
             description="내가 쓴 게시글에 댓글이 달리면 알려드려요"
-            checked={communityMyPostComment}
-            onChange={setCommunityMyPostComment}
+            checked={settings.communityMyPostComment}
+            onChange={() => toggle('communityMyPostComment')}
             disabled={off}
           />
           <ToggleRow
             icon={<Reply size={18} className="text-violet-500" />}
             label="내 댓글 · 답글"
             description="내가 단 댓글에 답글이 달리면 알려드려요"
-            checked={communityMyComment}
-            onChange={setCommunityMyComment}
+            checked={settings.communityMyComment}
+            onChange={() => toggle('communityMyComment')}
             disabled={off}
           />
           <ToggleRow
             icon={<Heart size={18} className="text-rose-400" />}
             label="좋아요 누른 게시글"
             description="관심 표시한 게시글에 새 댓글이 달리면 알려드려요"
-            checked={communityLikedPost}
-            onChange={setCommunityLikedPost}
+            checked={settings.communityLikedPost}
+            onChange={() => toggle('communityLikedPost')}
             disabled={off}
           />
           <ToggleRow
             icon={<Gift size={18} className="text-secondary" />}
             label="나눔"
             description="나눔 게시글 관련 알림을 받아요"
-            checked={communityShare}
-            onChange={setCommunityShare}
+            checked={settings.communityShare}
+            onChange={() => toggle('communityShare')}
             disabled={off}
           />
           <ToggleRow
             icon={<ShieldAlert size={18} className="text-neutral-400" />}
             label="신고 결과"
             description="신고한 콘텐츠의 처리 결과를 알려드려요"
-            checked={communityReport}
-            onChange={setCommunityReport}
+            checked={settings.communityReport}
+            onChange={() => toggle('communityReport')}
             disabled={off}
           />
+        </div>
+
+        <div className="mx-4 mt-6 mb-2">
+          <button
+            onClick={() => postToRN({ type: 'test_notification' })}
+            className="w-full py-3.5 rounded-2xl border border-neutral-200 text-sm font-semibold text-neutral-500 active:bg-neutral-50 transition-colors"
+          >
+            테스트 알림 보내기
+          </button>
+          <p className="text-[11px] text-neutral-400 text-center mt-2">
+            3초 후 테스트 알림이 발송돼요
+          </p>
         </div>
 
         <div className="h-8" />

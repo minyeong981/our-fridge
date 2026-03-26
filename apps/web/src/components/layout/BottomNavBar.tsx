@@ -12,9 +12,9 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'fridge',    icon: Refrigerator, label: '냉장고'   },
-  { id: 'community', icon: Newspaper,    label: '커뮤니티' },
-  { id: 'my',        icon: User,         label: '마이'     },
+  { id: 'fridge', icon: Refrigerator, label: '홈' },
+  { id: 'community', icon: Newspaper, label: '커뮤니티' },
+  { id: 'my', icon: User, label: '마이' },
 ]
 
 interface BottomNavBarProps {
@@ -61,10 +61,7 @@ function NavButton({
         className={cn(active ? 'text-primary' : 'text-neutral-400')}
       />
       <span
-        className={cn(
-          'text-[10px] font-semibold',
-          active ? 'text-primary' : 'text-neutral-400'
-        )}
+        className={cn('text-[10px] font-semibold', active ? 'text-primary' : 'text-neutral-400')}
       >
         {item.label}
       </span>

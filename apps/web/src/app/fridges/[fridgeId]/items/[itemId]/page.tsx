@@ -1,75 +1,159 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronLeft, MoreHorizontal, Snowflake } from 'lucide-react'
+import { ChevronLeft, MoreVertical, Snowflake } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
+import { getItem, updateItem, deleteItem, createItemLog, getProfile } from '@our-fridge/api'
+import type { ItemLogAction, ItemStatus } from '@our-fridge/shared'
 
-const MOCK_ITEM = {
-  id: 'i1',
-  name: '싱싱한 양상추',
-  imageUrl: '/food1.jpg',
-  storageType: '냉장',
-  addedBy: '김민지',
-  startDate: '2024.06.20',
-  expiresAt: '2024.06.28',
-  daysLeft: 3,
-  totalDays: 60,
-  memo: '샌드위치용으로 구매함. 빨리 먹지 않으면 시들어 버리니 이번 주말 안에 꼭 드세요.',
-}
+const DAYS_CRITICAL = 3
+const DAYS_WARNING = 7
 
 type ProcessStatus = '다 먹었어요' | '못 찾겠어요' | '버렸어요'
 
-const PROCESS_ACTIONS: { status: ProcessStatus; emoji: string; description: string }[] = [
-  { status: '다 먹었어요', emoji: '✅', description: '맛있게 먹었어요' },
-  { status: '못 찾겠어요', emoji: '🔍', description: '어디 갔는지 모르겠어요' },
-  { status: '버렸어요', emoji: '🗑️', description: '기한이 지나서 버렸어요' },
+const PROCESS_ACTIONS: {
+  status: ProcessStatus
+  emoji: string
+  description: string
+  itemStatus: ItemStatus
+  logAction: ItemLogAction
+}[] = [
+  {
+    status: '다 먹었어요',
+    emoji: '✅',
+    description: '맛있게 먹었어요',
+    itemStatus: 'consumed',
+    logAction: 'consume',
+  },
+  {
+    status: '못 찾겠어요',
+    emoji: '🔍',
+    description: '어디 갔는지 모르겠어요',
+    itemStatus: 'discarded',
+    logAction: 'lost',
+  },
+  {
+    status: '버렸어요',
+    emoji: '🗑️',
+    description: '기한이 지나서 버렸어요',
+    itemStatus: 'discarded',
+    logAction: 'discard',
+  },
 ]
 
 export default function ItemDetailPage() {
   const router = useRouter()
   const { fridgeId, itemId } = useParams<{ fridgeId: string; itemId: string }>()
+  const queryClient = useQueryClient()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
   const [processStatus, setProcessStatus] = useState<ProcessStatus | null>(null)
 
-  const { daysLeft, totalDays, imageUrl } = MOCK_ITEM
-  const progress = Math.max(0, Math.min(1, daysLeft / totalDays))
-  const daysLabel = daysLeft >= 0 ? `D-${daysLeft}` : `D+${Math.abs(daysLeft)}`
-  const isExpired = daysLeft < 0
+  const { data: item, isLoading } = useQuery({
+    queryKey: ['item', itemId],
+    queryFn: () => getItem(itemId),
+    enabled: !!itemId,
+  })
+
+  const { data: registeredByProfile } = useQuery({
+    queryKey: ['profile', item?.registeredBy],
+    queryFn: () => getProfile(item?.registeredBy ?? ''),
+    enabled: !!item?.registeredBy,
+  })
+
+  const { mutate: processItem, isPending: isProcessing } = useMutation({
+    mutationFn: async (selected: ProcessStatus) => {
+      const action = PROCESS_ACTIONS.find((a) => a.status === selected)!
+      await updateItem(itemId, { status: action.itemStatus })
+      await createItemLog({ itemId, action: action.logAction })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items', fridgeId] })
+      router.back()
+    },
+  })
+
+  const { mutate: handleDelete } = useMutation({
+    mutationFn: () => deleteItem(itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items', fridgeId] })
+      router.back()
+    },
+  })
+
+  if (isLoading || !item) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    )
+  }
+
+  const startDate = new Date(item.createdAt)
+  const expireDate = item.expireDate ? new Date(item.expireDate) : null
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const daysLeft = expireDate
+    ? Math.floor((expireDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    : null
+  const totalDays = expireDate
+    ? Math.floor((expireDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+    : null
+
+  const isExpired = daysLeft !== null && daysLeft < 0
+  const isCritical = daysLeft !== null && daysLeft <= DAYS_CRITICAL
+  const isWarning = daysLeft !== null && daysLeft <= DAYS_WARNING
+
+  // 경과 비율 — totalDays가 0 이하여도 만료면 꽉 찬 바 표시
+  const progress =
+    daysLeft !== null
+      ? totalDays && totalDays > 0
+        ? Math.min(1, (totalDays - daysLeft) / totalDays)
+        : isExpired
+          ? 1
+          : 0
+      : null
+
+  const daysLabel =
+    daysLeft === null ? null : daysLeft >= 0 ? `D-${daysLeft}` : `D+${Math.abs(daysLeft)}`
   const expiryColor =
-    isExpired || daysLeft <= 3 ? 'text-red-500' : daysLeft <= 7 ? 'text-amber-500' : 'text-primary'
+    isExpired || isCritical ? 'text-red-500' : isWarning ? 'text-amber-500' : 'text-primary'
   const barColor =
-    isExpired || daysLeft <= 3 ? 'bg-red-400' : daysLeft <= 7 ? 'bg-amber-400' : 'bg-primary'
+    isExpired || isCritical ? 'bg-red-400' : isWarning ? 'bg-amber-400' : 'bg-primary'
+
+  const fmt = (d: Date) =>
+    `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
 
   return (
-    <div className="h-full flex flex-col overflow-hidden relative">
-      {/* 스크롤 전체 영역 */}
+    <div className="h-full flex flex-col relative">
       <div className="flex-1 min-h-0 overflow-y-auto">
-        {/* 이미지 영역 */}
-        <div className="relative w-full aspect-square bg-neutral-100 shrink-0">
-          {imageUrl ? (
-            <img src={imageUrl} alt={MOCK_ITEM.name} className="w-full h-full object-cover" />
+        <div className="relative w-full h-56 bg-neutral-100 shrink-0">
+          {item.imageUrl ? (
+            <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-neutral-100 flex items-center justify-center">
               <span className="text-neutral-300 text-sm font-medium">사진 없음</span>
             </div>
           )}
 
-          {/* 플로팅 버튼 */}
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/40 to-transparent pointer-events-none" />
           <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
             <button
               onClick={() => router.back()}
-              className="w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full shadow flex items-center justify-center"
+              className="w-10 h-10 flex items-center justify-center"
             >
-              <ChevronLeft size={20} className="text-neutral-700" />
+              <ChevronLeft size={26} className="text-white" />
             </button>
             <div className="relative">
               <button
                 onClick={() => setIsMenuOpen((v) => !v)}
-                className="w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full shadow flex items-center justify-center"
+                className="w-10 h-10 flex items-center justify-center"
               >
-                <MoreHorizontal size={18} className="text-neutral-700" />
+                <MoreVertical size={22} className="text-white" />
               </button>
               {isMenuOpen && (
                 <>
@@ -88,7 +172,7 @@ export default function ItemDetailPage() {
                     <button
                       onClick={() => {
                         setIsMenuOpen(false)
-                        setIsProcessModalOpen(true)
+                        setIsDeleteConfirmOpen(true)
                       }}
                       className="w-full px-4 py-3.5 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors text-left"
                     >
@@ -102,57 +186,65 @@ export default function ItemDetailPage() {
         </div>
 
         {/* 콘텐츠 */}
-        <div className="bg-white px-5 pb-28">
-          {/* 이름 + 보관 방식 + 등록자 */}
-          <div className="pt-5 pb-5">
-            <h2 className="text-2xl font-extrabold text-neutral-800 tracking-tight mb-2">
-              {MOCK_ITEM.name}
+        <div className="bg-white px-5 flex flex-col gap-8 pt-6 pb-20">
+          {/* 이름 + 보관 방식 */}
+          <div>
+            <h2 className="text-2xl font-extrabold text-neutral-800 tracking-tight mb-3">
+              {item.name}
             </h2>
-            <div className="flex items-center gap-2 justify-between">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary-50 rounded-lg">
                 <Snowflake size={12} className="text-primary" />
-                <span className="text-xs font-semibold text-primary">
-                  {MOCK_ITEM.storageType} 보관
-                </span>
+                <span className="text-xs font-semibold text-primary">{item.storageType} 보관</span>
               </div>
-              <span className="text-xs text-neutral-400">{MOCK_ITEM.addedBy}님이 등록함</span>
+              {registeredByProfile?.name && (
+                <span className="text-xs text-neutral-400">
+                  {registeredByProfile.name}님이 등록함
+                </span>
+              )}
             </div>
           </div>
-
-          <br />
 
           {/* 소비기한 */}
-          <div className="mb-5">
-            <div className="mb-3">
-              <p className="text-xs font-semibold text-neutral-400 mb-0.5">소비기한</p>
-              <span className={cn('text-4xl font-extrabold tracking-tighter', expiryColor)}>
-                {daysLabel}
-              </span>
-              <span className="text-sm text-neutral-400 ml-1.5">
-                {isExpired ? '기한 초과' : '남음'}
-              </span>
-            </div>
-            <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden">
-              <div
-                className={cn('h-full rounded-full', barColor)}
-                style={{ width: `${progress * 100}%` }}
-              />
-            </div>
-            <div className="flex justify-between mt-1.5">
-              <span className="text-[11px] text-neutral-400">{MOCK_ITEM.startDate}</span>
-              <span className="text-[11px] text-neutral-400">{MOCK_ITEM.expiresAt}</span>
-            </div>
-          </div>
-
-          {MOCK_ITEM.memo && (
-            <>
-              <div className="h-px bg-neutral-100 mb-5" />
+          {daysLabel !== null && expireDate && (
+            <div>
+              <p className="text-xs font-semibold text-neutral-400 mb-3">소비기한</p>
               <div className="mb-5">
-                <p className="text-xs font-semibold text-neutral-400 mb-2">메모</p>
-                <p className="text-sm text-neutral-700 leading-relaxed">{MOCK_ITEM.memo}</p>
+                <span className={cn('text-3xl font-extrabold tracking-tighter', expiryColor)}>
+                  {daysLabel}
+                </span>
+                <span className="text-sm text-neutral-400 ml-3">
+                  {isExpired ? '기한 초과' : '남음'}
+                </span>
               </div>
-            </>
+              <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
+                <div
+                  className={cn('h-full rounded-full transition-all', barColor)}
+                  style={{ width: `${(progress ?? 0) * 100}%` }}
+                />
+              </div>
+              <div className="flex justify-between mt-2.5">
+                <span className="text-[11px] text-neutral-400">{fmt(startDate)}</span>
+                <span className="text-[11px] text-neutral-400">{fmt(expireDate)}</span>
+              </div>
+            </div>
           )}
+
+          {/* 메모 */}
+          {item.memo && (
+            <div>
+              <p className="text-xs font-semibold text-neutral-400 mb-3">메모</p>
+              <p className="text-sm text-neutral-700 leading-relaxed">{item.memo}</p>
+            </div>
+          )}
+
+          {/* 처리하기 버튼 */}
+          <button
+            onClick={() => setIsProcessModalOpen(true)}
+            className="w-full py-4 rounded-2xl bg-primary text-white font-bold text-sm"
+          >
+            처리하기
+          </button>
         </div>
       </div>
 
@@ -196,14 +288,51 @@ export default function ItemDetailPage() {
               ))}
             </div>
             <button
-              disabled={!processStatus}
+              disabled={!processStatus || isProcessing}
               onClick={() => {
-                router.back()
+                if (processStatus) processItem(processStatus)
               }}
-              className="w-full py-4 rounded-2xl font-bold text-sm transition-colors disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed bg-red-500 text-white"
+              className="w-full py-4 rounded-2xl font-bold text-sm transition-colors disabled:bg-neutral-200 disabled:text-neutral-400 bg-red-500 text-white"
             >
-              {processStatus ? `${processStatus} 처리하기` : '선택해주세요'}
+              {isProcessing
+                ? '처리 중...'
+                : processStatus
+                  ? `${processStatus} 처리하기`
+                  : '선택해주세요'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 삭제 확인 모달 */}
+      {isDeleteConfirmOpen && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center px-6">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setIsDeleteConfirmOpen(false)}
+          />
+          <div className="relative bg-white rounded-3xl px-6 py-6 w-full max-w-sm flex flex-col gap-4">
+            <div>
+              <p className="text-base font-extrabold text-neutral-800 mb-1">정말 삭제할까요?</p>
+              <p className="text-sm text-neutral-500">삭제한 음식은 되돌릴 수 없어요.</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsDeleteConfirmOpen(false)}
+                className="flex-1 py-3 rounded-2xl bg-neutral-100 text-sm font-semibold text-neutral-600"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => {
+                  setIsDeleteConfirmOpen(false)
+                  handleDelete()
+                }}
+                className="flex-1 py-3 rounded-2xl bg-red-500 text-sm font-semibold text-white"
+              >
+                삭제하기
+              </button>
+            </div>
           </div>
         </div>
       )}

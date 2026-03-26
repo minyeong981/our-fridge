@@ -1,13 +1,13 @@
 import Link from 'next/link'
-import { ChevronRight, Users, ShoppingBasket } from 'lucide-react'
+import { ChevronRight, Users, ShoppingBasket, Refrigerator } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export type FridgeRole = 'owner' | 'admin' | 'member'
 
 export interface FridgeCardProps {
   id: string
+  emoji?: string | null
   name: string
-  emoji: string
   role: FridgeRole
   memberCount: number
   itemCount: number
@@ -29,8 +29,8 @@ const roleBadgeClass: Record<FridgeRole, string> = {
 
 export function FridgeCard({
   id,
-  name,
   emoji,
+  name,
   role,
   memberCount,
   itemCount,
@@ -43,8 +43,12 @@ export function FridgeCard({
       onClick={onClick}
       className="flex items-center gap-4 bg-white rounded-2xl px-4 py-4 shadow-sm border border-neutral-100 hover:bg-neutral-50 transition-colors"
     >
-      <div className="w-12 h-12 rounded-xl bg-primary-50 flex items-center justify-center text-2xl shrink-0">
-        {emoji}
+      <div className="w-12 h-12 rounded-xl bg-primary-50 flex items-center justify-center shrink-0">
+        {emoji ? (
+          <span className="text-2xl">{emoji}</span>
+        ) : (
+          <Refrigerator size={22} className="text-primary" />
+        )}
       </div>
 
       <div className="flex-1 min-w-0">
