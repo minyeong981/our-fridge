@@ -1,3 +1,5 @@
+import { Appearance } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { WebView } from 'react-native-webview'
 import type React from 'react'
 import {
@@ -70,6 +72,10 @@ export function handleWebMessage(
       import('@/lib/supabase').then(({ supabase }) => {
         supabase.auth.signOut().then(() => onLogout?.())
       })
+    } else if (msg.type === 'theme_change') {
+      const scheme = msg.theme === 'dark' ? 'dark' : msg.theme === 'light' ? 'light' : null
+      Appearance.setColorScheme(scheme as 'dark' | 'light' | null)
+      AsyncStorage.setItem('app_theme', msg.theme)
     }
   } catch {
     // 파싱 실패 무시

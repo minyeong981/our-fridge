@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
-import { useColorScheme } from 'react-native'
+import { useColorScheme, Appearance } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Tabs, useRouter } from 'expo-router'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import * as Linking from 'expo-linking'
 import * as Notifications from 'expo-notifications'
-import { setActiveTab, navigateWebView } from '@/lib/webViewRefs'
+import { setActiveTab, navigateWebView, dispatchClosePanel, homeWebViewRef, communityWebViewRef, myWebViewRef } from '@/lib/webViewRefs'
+import { useNotificationSetup } from '@/hooks/useNotificationSetup'
 
 function toWebPath(url: string): string {
   if (url.startsWith('http')) {
@@ -37,6 +39,21 @@ export default function TabLayout() {
   const router = useRouter()
   const colorScheme = useColorScheme()
   const isDark = colorScheme === 'dark'
+
+  // 저장된 테마 복원
+  useEffect(() => {
+    AsyncStorage.getItem('app_theme').then((saved) => {
+      if (saved === 'dark') Appearance.setColorScheme('dark')
+      else if (saved === 'light') Appearance.setColorScheme('light')
+      else if (saved === 'system') Appearance.setColorScheme(null)
+    })
+  }, [])
+
+  // 알림 채널 설정 + 토큰 전송
+  useNotificationSetup({
+    webViewRef: homeWebViewRef,
+    onNavigate: (path) => navigateToPath(router, path),
+  })
 
   // 딥링크
   useEffect(() => {
@@ -84,7 +101,7 @@ export default function TabLayout() {
           title: '홈',
           tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="fridge-outline" size={size} color={color} />,
         }}
-        listeners={{ focus: () => setActiveTab('home') }}
+        listeners={{ focus: () => setActiveTab('home'), blur: () => dispatchClosePanel(homeWebViewRef) }}
       />
       <Tabs.Screen
         name="community"
@@ -92,7 +109,7 @@ export default function TabLayout() {
           title: '커뮤니티',
           tabBarIcon: ({ color, size }) => <Ionicons name="newspaper-outline" size={size} color={color} />,
         }}
-        listeners={{ focus: () => setActiveTab('community') }}
+        listeners={{ focus: () => setActiveTab('community'), blur: () => dispatchClosePanel(communityWebViewRef) }}
       />
       <Tabs.Screen
         name="my"
@@ -100,7 +117,7 @@ export default function TabLayout() {
           title: '마이',
           tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
         }}
-        listeners={{ focus: () => setActiveTab('my') }}
+        listeners={{ focus: () => setActiveTab('my'), blur: () => dispatchClosePanel(myWebViewRef) }}
       />
     </Tabs>
   )

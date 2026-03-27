@@ -1,4 +1,5 @@
 import { createRef } from 'react'
+import type React from 'react'
 import type { WebView } from 'react-native-webview'
 
 export const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL ?? 'http://10.0.2.2:3000'
@@ -32,4 +33,16 @@ export function injectToActive(js: string) {
     activeTab === 'community' ? communityWebViewRef :
     myWebViewRef
   ref.current?.injectJavaScript(js)
+}
+
+// 특정 WebView의 알림 패널 닫기 (탭 전환 시 호출)
+export function dispatchClosePanel(ref: React.RefObject<import('react-native-webview').WebView | null>) {
+  ref.current?.injectJavaScript(`
+    (function(){
+      window.dispatchEvent(new MessageEvent('message', {
+        data: ${JSON.stringify(JSON.stringify({ type: 'close_panel' }))}
+      }));
+    })();
+    true;
+  `)
 }
