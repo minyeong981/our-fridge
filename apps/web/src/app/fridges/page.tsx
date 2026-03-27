@@ -81,7 +81,7 @@ export default function FridgesPage() {
       {!isEmpty && (
         <button
           onClick={() => setIsModalOpen(true)}
-          className="fixed bottom-3 right-4 flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/30 font-semibold text-sm z-40"
+          className="fixed bottom-4 right-4 flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/30 font-semibold text-sm z-40"
         >
           <Plus size={18} strokeWidth={2.5} />
           냉장고 추가
