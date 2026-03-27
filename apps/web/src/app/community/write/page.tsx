@@ -16,7 +16,7 @@ function postToRN(data: object) {
   ;(window as any).ReactNativeWebView.postMessage(JSON.stringify(data))
 }
 
-const CATEGORIES: PostCategory[] = ['나눔/공유', '이의 제기/신고', '정보/메시지']
+const CATEGORIES: PostCategory[] = ['정보', '나눔/공유', '잡담', '이의 제기/신고']
 
 const MAX_TITLE_LENGTH = 50
 const MAX_CONTENT_LENGTH = 500
@@ -41,8 +41,8 @@ function CommunityWriteContent() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(false)
-  const [photos, setPhotos] = useState<string[]>([])        // 미리보기용 data URL
-  const [uploadedUrls, setUploadedUrls] = useState<string[]>([])  // 업로드된 URL
+  const [photos, setPhotos] = useState<string[]>([]) // 미리보기용 data URL
+  const [uploadedUrls, setUploadedUrls] = useState<string[]>([]) // 업로드된 URL
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [showPickerSheet, setShowPickerSheet] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -141,7 +141,8 @@ function CommunityWriteContent() {
   })
 
   const isReport = category === '이의 제기/신고'
-  const canSubmit = title.trim().length > 0 && content.trim().length > 0 && !isPending && !isUploadingPhoto
+  const canSubmit =
+    title.trim().length > 0 && content.trim().length > 0 && !isPending && !isUploadingPhoto
 
   return (
     <div className="h-full bg-white flex flex-col">
@@ -158,7 +159,9 @@ function CommunityWriteContent() {
         </h1>
         <button
           disabled={!canSubmit}
-          onClick={() => { if (canSubmit) submit() }}
+          onClick={() => {
+            if (canSubmit) submit()
+          }}
           className="text-sm font-bold text-primary disabled:text-neutral-300 transition-colors"
         >
           {isPending ? '저장 중...' : '완료'}
@@ -206,7 +209,10 @@ function CommunityWriteContent() {
           {/* 사진 추가 */}
           <div className="flex flex-col gap-2.5">
             <p className="text-xs font-semibold text-neutral-500">
-              사진 <span className="text-neutral-400 font-normal">{photos.length} / {MAX_PHOTOS}</span>
+              사진{' '}
+              <span className="text-neutral-400 font-normal">
+                {photos.length} / {MAX_PHOTOS}
+              </span>
             </p>
             <div className="flex gap-2 flex-wrap">
               {/* 추가 버튼 — 항상 맨 앞 */}
@@ -250,7 +256,13 @@ function CommunityWriteContent() {
               >
                 {isAnonymous && (
                   <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                    <path d="M1 4l2.5 2.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path
+                      d="M1 4l2.5 2.5L9 1"
+                      stroke="white"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 )}
               </div>
@@ -271,13 +283,19 @@ function CommunityWriteContent() {
       {/* RN 이미지 소스 선택 시트 */}
       {showPickerSheet && (
         <>
-          <div className="fixed inset-0 bg-black/40 z-50" onClick={() => setShowPickerSheet(false)} />
+          <div
+            className="fixed inset-0 bg-black/40 z-50"
+            onClick={() => setShowPickerSheet(false)}
+          />
           <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 pb-8">
             <div className="flex justify-center pt-3 pb-4">
               <div className="w-10 h-1 bg-neutral-200 rounded-full" />
             </div>
             <button
-              onClick={() => { setShowPickerSheet(false); postToRN({ type: 'pick_image', source: 'camera' }) }}
+              onClick={() => {
+                setShowPickerSheet(false)
+                postToRN({ type: 'pick_image', source: 'camera' })
+              }}
               className="w-full flex items-center gap-4 px-6 py-4 active:bg-neutral-50 transition-colors"
             >
               <div className="w-10 h-10 rounded-2xl bg-neutral-100 flex items-center justify-center">
@@ -286,7 +304,10 @@ function CommunityWriteContent() {
               <span className="text-sm font-semibold text-neutral-800">카메라로 찍기</span>
             </button>
             <button
-              onClick={() => { setShowPickerSheet(false); postToRN({ type: 'pick_image', source: 'gallery' }) }}
+              onClick={() => {
+                setShowPickerSheet(false)
+                postToRN({ type: 'pick_image', source: 'gallery' })
+              }}
               className="w-full flex items-center gap-4 px-6 py-4 active:bg-neutral-50 transition-colors"
             >
               <div className="w-10 h-10 rounded-2xl bg-neutral-100 flex items-center justify-center">

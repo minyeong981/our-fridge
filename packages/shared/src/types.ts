@@ -86,7 +86,7 @@ export type CreateItemLogInput = Pick<ItemLog, 'itemId' | 'action'> & {
 
 // ─── Community ────────────────────────────────────────────────────────────────
 
-export type PostCategory = '정보' | '나눔/공유' | '이의 제기/신고'
+export type PostCategory = '정보' | '나눔/공유' | '잡담' | '이의 제기/신고'
 
 export type Post = {
   id: string

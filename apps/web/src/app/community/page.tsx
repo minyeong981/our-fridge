@@ -11,12 +11,13 @@ import { timeAgo } from '@our-fridge/shared'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Post } from '@our-fridge/shared'
 
-type TabType = '전체' | '정보' | '나눔/공유' | '이의 제기/신고'
-const TABS: TabType[] = ['전체', '정보', '나눔/공유', '이의 제기/신고']
+type TabType = '전체' | '정보' | '나눔/공유' | '잡담' | '이의 제기/신고'
+const TABS: TabType[] = ['전체', '정보', '나눔/공유', '잡담', '이의 제기/신고']
 const TAB_LABEL: Record<TabType, string> = {
   전체: '전체',
   정보: '정보',
   '나눔/공유': '나눔/공유',
+  잡담: '잡담',
   '이의 제기/신고': '이의 제기/신고',
 }
 
