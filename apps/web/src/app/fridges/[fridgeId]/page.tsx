@@ -12,6 +12,7 @@ import {
   Settings,
   UserMinus,
   User,
+  Flag,
 } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -482,6 +483,20 @@ export default function FridgeDetailPage() {
                   >
                     <Settings size={16} className="text-neutral-400 shrink-0" />
                     <span className="flex-1">냉장고 설정</span>
+                    <ChevronRight
+                      size={SIDE_PANEL_CHEVRON_SIZE}
+                      className={`${SIDE_PANEL_CHEVRON_COLOR} shrink-0`}
+                    />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsSidePanelOpen(false)
+                      router.push(`/fridges/${fridgeId}/reports`)
+                    }}
+                    className="w-full flex items-center gap-3 py-3 text-sm font-semibold text-neutral-700 hover:text-primary transition-colors text-left"
+                  >
+                    <Flag size={16} className="text-neutral-400 shrink-0" />
+                    <span className="flex-1">신고 내역</span>
                     <ChevronRight
                       size={SIDE_PANEL_CHEVRON_SIZE}
                       className={`${SIDE_PANEL_CHEVRON_COLOR} shrink-0`}
