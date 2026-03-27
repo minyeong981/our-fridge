@@ -41,8 +41,9 @@ export function MemberSheet({ isOpen, onClose, members }: MemberSheetProps) {
             <li key={m.id} className="flex items-center gap-3 py-3">
               {m.avatarUrl ? (
                 <img
-                  src={m.avatarUrl}
+                  src={m.avatarUrl.replace(/^http:\/\//, 'https://')}
                   alt={m.name}
+                  referrerPolicy="no-referrer"
                   className="w-10 h-10 rounded-full object-cover shrink-0"
                 />
               ) : (

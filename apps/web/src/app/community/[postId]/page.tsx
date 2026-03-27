@@ -27,8 +27,9 @@ function Avatar({ name, avatarUrl, size = 7 }: { name: string | null; avatarUrl:
   if (avatarUrl) {
     return (
       <img
-        src={avatarUrl}
+        src={avatarUrl.replace(/^http:\/\//, 'https://')}
         alt={name ?? ''}
+        referrerPolicy="no-referrer"
         className={`w-${size} h-${size} rounded-full object-cover shrink-0 mt-0.5`}
       />
     )

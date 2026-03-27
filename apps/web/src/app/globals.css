@@ -106,6 +106,7 @@
   & .bg-neutral-50     { background-color: #1C1C1E; }
   & .bg-neutral-100    { background-color: #3A3A3C; }
   & .bg-neutral-200    { background-color: #48484A; }
+  & .bg-primary-50     { background-color: rgba(74, 184, 207, 0.15); }
 
   /* 텍스트
      WCAG AA 기준 (4.5:1 이상 / 큰 글씨·볼드 3:1)

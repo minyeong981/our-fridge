@@ -39,7 +39,7 @@ export default function MyPage() {
       {/* 프로필 */}
       <div className="bg-white px-5 pt-6 pb-5 flex items-center gap-4">
         {profile?.avatarUrl ? (
-          <img src={profile.avatarUrl} alt="프로필" className="w-10 h-10 rounded-full object-cover shrink-0" />
+          <img src={profile.avatarUrl.replace(/^http:\/\//, 'https://')} alt="프로필" referrerPolicy="no-referrer" className="w-10 h-10 rounded-full object-cover shrink-0" />
         ) : (
           <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center shrink-0">
             <User size={18} className="text-primary" />
@@ -137,7 +137,9 @@ export default function MyPage() {
           onClick={async () => {
             const supabase = createClient()
             await supabase.auth.signOut()
-            router.push('/login')
+            if (typeof window !== 'undefined' && (window as any).ReactNativeWebView) {
+              ;(window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'logout' }))
+            }
           }}
           className="w-full flex items-center gap-3 px-5 py-4"
         >
