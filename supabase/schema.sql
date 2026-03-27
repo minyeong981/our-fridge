@@ -242,3 +242,44 @@ create trigger on_auth_user_created
 -- ─── Fridges location migration ───────────────────────────────────────────────
 
 alter table fridges add column if not exists location text;
+
+-- ─── Reports ──────────────────────────────────────────────────────────────────
+
+create table if not exists reports (
+  id          uuid primary key default gen_random_uuid(),
+  reporter_id uuid not null references auth.users(id) on delete cascade,
+  target_type text not null check (target_type in ('post', 'comment')),
+  target_id   uuid not null,
+  fridge_id   uuid not null,
+  reason      text not null,
+  status      text not null check (status in ('pending', 'resolved', 'dismissed')) default 'pending',
+  created_at  timestamptz not null default now()
+);
+
+alter table reports enable row level security;
+
+-- 신고자는 본인 신고 삽입 가능
+create policy "reports: 인증 사용자 삽입" on reports
+  for insert with check (auth.uid() is not null and reporter_id = auth.uid());
+
+-- 냉장고 admin/owner만 조회 가능
+create policy "reports: admin/owner 조회" on reports
+  for select using (
+    exists (
+      select 1 from memberships m
+      where m.fridge_id = reports.fridge_id
+        and m.user_id = auth.uid()
+        and m.role in ('owner', 'admin')
+    )
+  );
+
+-- 냉장고 admin/owner만 상태 업데이트 가능
+create policy "reports: admin/owner 상태 변경" on reports
+  for update using (
+    exists (
+      select 1 from memberships m
+      where m.fridge_id = reports.fridge_id
+        and m.user_id = auth.uid()
+        and m.role in ('owner', 'admin')
+    )
+  );
