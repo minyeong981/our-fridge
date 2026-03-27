@@ -18,8 +18,9 @@ function Avatar({ name, avatarUrl, size = 6 }: { name: string | null; avatarUrl:
   if (avatarUrl) {
     return (
       <img
-        src={avatarUrl}
+        src={avatarUrl.replace(/^http:\/\//, 'https://')}
         alt={name ?? ''}
+        referrerPolicy="no-referrer"
         className={`w-${size} h-${size} rounded-full object-cover shrink-0`}
       />
     )
@@ -61,7 +62,7 @@ export default function CommunityPage() {
   // 냉장고 없음 — 먼저 만들도록 유도
   if (!authLoading && !isFridgesLoading && fridges.length === 0) {
     return (
-      <div className="h-full bg-neutral-50 flex flex-col items-center justify-center gap-4 pb-16 px-8">
+      <div className="h-full bg-neutral-50 flex flex-col items-center justify-center gap-6 pb-16 px-8">
         <p className="text-4xl">🧊</p>
         <div className="text-center">
           <p className="text-sm font-bold text-neutral-700 mb-1">아직 냉장고가 없어요</p>
@@ -124,7 +125,7 @@ export default function CommunityPage() {
             <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-2 pb-16">
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 pb-16">
             <p className="text-3xl">📭</p>
             <p className="text-sm text-neutral-400">아직 게시글이 없어요</p>
           </div>

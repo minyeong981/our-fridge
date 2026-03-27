@@ -69,7 +69,7 @@ export default function MyPostsPage() {
             <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           </div>
         ) : posts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-2 pb-16">
+          <div className="flex flex-col items-center justify-center h-full gap-4 pb-16">
             <p className="text-3xl">📝</p>
             <p className="text-sm text-neutral-400">작성한 게시글이 없어요</p>
           </div>

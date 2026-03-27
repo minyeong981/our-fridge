@@ -369,7 +369,7 @@ export default function FridgeDetailPage() {
 
             {/* 음식 목록 */}
             {filteredItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-3 px-4 text-center min-h-[55vh]">
+              <div className="flex flex-col items-center justify-center gap-5 px-4 text-center min-h-[55vh]">
                 <div className="text-5xl">🥪</div>
                 <div>
                   <p className="font-bold text-neutral-700 text-base">아직 저장된 음식이 없어요</p>
@@ -520,8 +520,9 @@ export default function FridgeDetailPage() {
                     <div className="w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center shrink-0">
                       {m.avatarUrl ? (
                         <img
-                          src={m.avatarUrl}
+                          src={m.avatarUrl.replace(/^http:\/\//, 'https://')}
                           alt={m.name}
+                          referrerPolicy="no-referrer"
                           className="w-full h-full rounded-full object-cover"
                         />
                       ) : (

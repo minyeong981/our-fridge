@@ -41,7 +41,7 @@ export default function FridgesPage() {
   return (
     <div className="h-full bg-neutral-50 flex flex-col overflow-hidden">
       {isEmpty ? (
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-4 text-center pb-16">
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 text-center pb-16">
           <div className="text-5xl">🧊</div>
           <div>
             <p className="font-bold text-neutral-700 text-base">아직 냉장고가 없어요</p>
