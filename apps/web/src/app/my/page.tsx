@@ -14,6 +14,7 @@ import {
   ChevronRight,
   FileEdit,
   User,
+  MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
@@ -120,6 +121,17 @@ export default function MyPage() {
           </span>
           <ChevronRight size={14} className="text-neutral-300" />
         </button>
+
+        <a
+          href="https://docs.google.com/spreadsheets/d/1WQEYHQSMtzsKn2GJWPcAVHYbnGer8q4yp9H5oyas3Ak/edit?usp=sharing"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full flex items-center gap-3 px-5 py-4"
+        >
+          <MessageSquare size={16} className="text-neutral-400 shrink-0" />
+          <span className="flex-1 text-sm font-semibold text-neutral-800 text-left">문의하기</span>
+          <ChevronRight size={14} className="text-neutral-300" />
+        </a>
 
         <div className="flex items-center gap-3 px-5 py-4">
           <Info size={16} className="text-neutral-400 shrink-0" />
