@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useColorScheme } from 'react-native'
 import { Tabs, useRouter } from 'expo-router'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import * as Linking from 'expo-linking'
@@ -34,6 +35,8 @@ function navigateToPath(router: ReturnType<typeof useRouter>, path: string) {
 
 export default function TabLayout() {
   const router = useRouter()
+  const colorScheme = useColorScheme()
+  const isDark = colorScheme === 'dark'
 
   // 딥링크
   useEffect(() => {
@@ -60,10 +63,10 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: '#4AB8CF',
-        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarInactiveTintColor: isDark ? '#6B7280' : '#9CA3AF',
         tabBarStyle: {
-          backgroundColor: '#ffffff',
-          borderTopColor: '#F3F4F6',
+          backgroundColor: isDark ? '#1C1C1E' : '#ffffff',
+          borderTopColor: isDark ? 'rgba(255,255,255,0.07)' : '#F3F4F6',
           borderTopWidth: 1,
           height: 60,
           paddingBottom: 8,

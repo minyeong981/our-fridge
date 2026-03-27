@@ -46,6 +46,7 @@ function injectMessage(webViewRef: React.RefObject<WebView | null>, data: object
 export function handleWebMessage(
   webViewRef: React.RefObject<WebView | null>,
   data: string,
+  onLogout?: () => void,
 ) {
   try {
     const msg = JSON.parse(data)
@@ -64,6 +65,10 @@ export function handleWebMessage(
       requestPermissionAndGetToken().then((token) => {
         if (!token) return
         injectMessage(webViewRef, { type: 'push_token', token })
+      })
+    } else if (msg.type === 'logout') {
+      import('@/lib/supabase').then(({ supabase }) => {
+        supabase.auth.signOut().then(() => onLogout?.())
       })
     }
   } catch {

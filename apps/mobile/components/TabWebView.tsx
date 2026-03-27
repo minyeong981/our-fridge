@@ -1,6 +1,6 @@
 import { useRef, useCallback } from 'react'
 import type React from 'react'
-import { BackHandler, StyleSheet, View, ActivityIndicator } from 'react-native'
+import { BackHandler, StyleSheet, View, ActivityIndicator, useColorScheme } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { WebView } from 'react-native-webview'
 import type { WebViewNavigation } from 'react-native-webview'
@@ -16,10 +16,12 @@ interface TabWebViewProps {
   path: string
   webViewRef: React.RefObject<WebView | null>
   onBackToHome?: () => void
+  onLogout?: () => void
 }
 
-export function TabWebView({ path, webViewRef, onBackToHome }: TabWebViewProps) {
+export function TabWebView({ path, webViewRef, onBackToHome, onLogout }: TabWebViewProps) {
   const canGoBackRef = useRef(false)
+  const isDark = useColorScheme() === 'dark'
 
   // 세션 주입 — WebView 로드 완료 시
   const handleLoadEnd = useCallback(async () => {
@@ -65,11 +67,13 @@ export function TabWebView({ path, webViewRef, onBackToHome }: TabWebViewProps) 
   }
 
   const handleMessage = (event: { nativeEvent: { data: string } }) => {
-    handleWebMessage(webViewRef, event.nativeEvent.data)
+    handleWebMessage(webViewRef, event.nativeEvent.data, onLogout)
   }
 
+  const bg = isDark ? '#1C1C1E' : '#ffffff'
+
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: bg }]} edges={['top']}>
       <WebView
         ref={webViewRef}
         source={{ uri: `${WEB_URL}${path}` }}
@@ -80,7 +84,7 @@ export function TabWebView({ path, webViewRef, onBackToHome }: TabWebViewProps) 
         userAgent={USER_AGENT}
         startInLoadingState
         renderLoading={() => (
-          <View style={styles.loading}>
+          <View style={[styles.loading, { backgroundColor: bg }]}>
             <ActivityIndicator size="large" color="#4AB8CF" />
           </View>
         )}
@@ -92,7 +96,6 @@ export function TabWebView({ path, webViewRef, onBackToHome }: TabWebViewProps) 
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#ffffff',
   },
   webview: {
     flex: 1,
@@ -101,6 +104,5 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
   },
 })

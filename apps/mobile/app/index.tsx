@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useColorScheme } from 'react-native'
 import { Redirect } from 'expo-router'
 import { View, ActivityIndicator } from 'react-native'
 import { supabase } from '@/lib/supabase'
@@ -6,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 export default function Index() {
   const [checking, setChecking] = useState(true)
   const [hasSession, setHasSession] = useState(false)
+  const isDark = useColorScheme() === 'dark'
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -16,7 +18,7 @@ export default function Index() {
 
   if (checking) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff' }}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? '#1C1C1E' : '#ffffff' }}>
         <ActivityIndicator size="large" color="#4AB8CF" />
       </View>
     )
