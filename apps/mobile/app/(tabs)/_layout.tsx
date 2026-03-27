@@ -139,7 +139,7 @@ export default function TabLayout() {
         name="community"
         options={{
           title: '커뮤니티',
-          tabBarIcon: ({ color, size }) => <Ionicons name="chatbubbles-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" size={size} color={color} />,
         }}
         listeners={{ focus: () => setActiveTab('community'), blur: () => dispatchClosePanel(communityWebViewRef) }}
       />

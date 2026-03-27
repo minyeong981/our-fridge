@@ -3,7 +3,6 @@
 import { useParams } from 'next/navigation'
 import { Flag } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { BackHeader } from '@/components/layout/BackHeader'
 import { getReports, updateReportStatus } from '@our-fridge/api'
 import { timeAgo } from '@our-fridge/shared'
 import { cn } from '@/lib/utils'
@@ -46,7 +45,6 @@ export default function ReportsPage() {
 
   return (
     <div className="h-full bg-neutral-50 flex flex-col overflow-hidden">
-      <BackHeader title="신고 내역" hideActions />
 
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">

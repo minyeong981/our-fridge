@@ -71,7 +71,7 @@ export default function MyPage() {
       <p className="px-5 pt-5 pb-1.5 text-[11px] font-bold text-neutral-400 tracking-widest">
         설정
       </p>
-      <div className="bg-white divide-y ">
+      <div className="bg-white divide-y divide-neutral-100">
         {/* 화면 모드 */}
         <button
           onClick={() => setShowThemeSheet(true)}
@@ -101,7 +101,7 @@ export default function MyPage() {
       <p className="px-5 pt-5 pb-1.5 text-[11px] font-bold text-neutral-400 tracking-widest">
         정보
       </p>
-      <div className="bg-white divide-y ">
+      <div className="bg-white divide-y divide-neutral-100">
         <button
           onClick={() => router.push('/my/notices')}
           className="w-full flex items-center gap-3 px-5 py-4"
@@ -149,7 +149,7 @@ export default function MyPage() {
       <p className="px-5 pt-5 pb-1.5 text-[11px] font-bold text-neutral-400 tracking-widest">
         계정
       </p>
-      <div className="bg-white divide-y ">
+      <div className="bg-white divide-y divide-neutral-100">
         <button
           onClick={async () => {
             const supabase = createClient()

@@ -370,7 +370,7 @@ export default function FridgeDetailPage() {
 
             {/* 음식 목록 */}
             {filteredItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-5 px-4 text-center min-h-[55vh]">
+              <div className="flex flex-col items-center justify-center gap-5 px-4 text-center min-h-[65vh]">
                 <div className="text-5xl">🥪</div>
                 <div>
                   <p className="font-bold text-neutral-700 text-base">아직 저장된 음식이 없어요</p>
@@ -573,7 +573,7 @@ export default function FridgeDetailPage() {
 
       <button
         onClick={() => router.push(`/fridges/${fridgeId}/add`)}
-        className="fixed bottom-4 right-4 flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/30 font-semibold text-sm z-40"
+        className="fixed bottom-7 right-4 flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/30 font-semibold text-sm z-40"
       >
         <Plus size={18} strokeWidth={2.5} />
         추가

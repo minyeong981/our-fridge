@@ -162,7 +162,7 @@ export default function CommunityPage() {
           onClick={() =>
             selectedFridgeId && router.push(`/community/write?fridgeId=${selectedFridgeId}`)
           }
-          className="fixed bottom-4 right-4 w-12 h-12 bg-primary text-white rounded-full shadow-lg shadow-primary/30 flex items-center justify-center z-40"
+          className="fixed bottom-7 right-4 w-12 h-12 bg-primary text-white rounded-full shadow-lg shadow-primary/30 flex items-center justify-center z-40"
         >
           <PenLine size={18} strokeWidth={2.5} />
         </button>

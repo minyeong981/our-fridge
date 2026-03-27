@@ -135,8 +135,12 @@ function CommunityWriteContent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
-      if (isEditMode) queryClient.invalidateQueries({ queryKey: ['post', postId] })
-      router.back()
+      if (isEditMode) {
+        queryClient.invalidateQueries({ queryKey: ['post', postId] })
+        router.back()
+      } else {
+        router.replace('/community')
+      }
     },
   })
 

@@ -7,6 +7,7 @@ import { BackHeader } from '@/components/layout/BackHeader'
 
 const BACK_HEADER_TITLES: Record<string, string> = {
   add: '음식 추가',
+  reports: '신고 내역',
 }
 
 export function HeaderWrapper() {
