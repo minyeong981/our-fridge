@@ -12,6 +12,7 @@ import { supabase } from './client'
 export type FridgeWithMeta = Fridge & {
   role: MemberRole
   memberCount: number
+  itemCount: number
 }
 
 export type MemberWithProfile = Membership & {
@@ -67,14 +68,19 @@ export async function getUserFridges(userId: string): Promise<FridgeWithMeta[]> 
 
   if (fridgeError) throw fridgeError
 
-  // 3단계: 냉장고별 멤버 수 조회
-  const { data: allMembers } = await supabase
-    .from('memberships')
-    .select('fridge_id')
-    .in('fridge_id', fridgeIds)
+  // 3단계: 냉장고별 멤버 수 + 활성 식재료 수 조회
+  const [{ data: allMembers }, { data: allItems }] = await Promise.all([
+    supabase.from('memberships').select('fridge_id').in('fridge_id', fridgeIds),
+    supabase.from('items').select('fridge_id').in('fridge_id', fridgeIds).eq('status', 'active'),
+  ])
 
   const memberCounts = (allMembers ?? []).reduce((acc: Record<string, number>, m: any) => {
     acc[m.fridge_id] = (acc[m.fridge_id] ?? 0) + 1
+    return acc
+  }, {})
+
+  const itemCounts = (allItems ?? []).reduce((acc: Record<string, number>, i: any) => {
+    acc[i.fridge_id] = (acc[i.fridge_id] ?? 0) + 1
     return acc
   }, {})
 
@@ -85,6 +91,7 @@ export async function getUserFridges(userId: string): Promise<FridgeWithMeta[]> 
       ...mapFridge(fridge),
       role: m.role as MemberRole,
       memberCount: memberCounts[m.fridge_id] ?? 0,
+      itemCount: itemCounts[m.fridge_id] ?? 0,
     }
   }).filter(Boolean) as FridgeWithMeta[]
 }

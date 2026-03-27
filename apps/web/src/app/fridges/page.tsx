@@ -25,7 +25,7 @@ export default function FridgesPage() {
     name: fridge.name,
     role: fridge.role,
     memberCount: fridge.memberCount,
-    itemCount: 0,
+    itemCount: fridge.itemCount,
   }))
 
   const isEmpty = !isLoading && fridgeCards.length === 0
