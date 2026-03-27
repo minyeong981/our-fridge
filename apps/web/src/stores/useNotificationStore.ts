@@ -78,7 +78,7 @@ const INITIAL_NOTIFICATIONS: Notification[] = [
   },
 ]
 
-interface NotificationState {
+export interface NotificationState {
   notifications: Notification[]
   unreadCount: number
   isPanelOpen: boolean
@@ -138,17 +138,20 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     const next = { ...get().settings, ...patch }
     set({ settings: next })
     if (typeof window !== 'undefined' && (window as any).ReactNativeWebView) {
-      ;(window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'notif_settings', data: next }))
+      ;(window as any).ReactNativeWebView.postMessage(
+        JSON.stringify({ type: 'notif_settings', data: next }),
+      )
     }
   },
 
-  addNotification: (n) =>
-    set((state) => setNotifications([n, ...state.notifications])),
+  addNotification: (n) => set((state) => setNotifications([n, ...state.notifications])),
 
   allowPushPermission: () => {
     localStorage.setItem('push_permission_asked', 'granted')
     if (typeof window !== 'undefined' && (window as any).ReactNativeWebView) {
-      ;(window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'request_push_permission' }))
+      ;(window as any).ReactNativeWebView.postMessage(
+        JSON.stringify({ type: 'request_push_permission' }),
+      )
     }
     set({ isPushPermissionSheetOpen: false })
   },
