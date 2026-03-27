@@ -44,6 +44,16 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   }
 }
 
+export async function savePushToken(token: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  await supabase.from('push_tokens').upsert({
+    user_id: user.id,
+    token,
+    updated_at: new Date().toISOString(),
+  })
+}
+
 export async function upsertProfile(userId: string, input: UpsertProfileInput): Promise<void> {
   const { error } = await supabase
     .from('profiles')

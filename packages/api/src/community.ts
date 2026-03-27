@@ -284,6 +284,20 @@ export async function getMyPosts(): Promise<Post[]> {
   return data.map((p: any) => mapPost(p, profileMap, likedIds))
 }
 
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+export async function sendCommentNotification(input: {
+  postId: string
+  commentId: string
+  parentId?: string | null
+}): Promise<void> {
+  try {
+    await supabase.functions.invoke('notify-comment', { body: input })
+  } catch {
+    // 알림 실패는 조용히 무시
+  }
+}
+
 // ─── Storage ──────────────────────────────────────────────────────────────────
 
 export async function uploadPostImage(base64: string, ext: string = 'webp'): Promise<string> {

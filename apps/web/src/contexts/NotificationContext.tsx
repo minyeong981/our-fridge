@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { savePushToken } from '@our-fridge/api'
 
 const PUSH_PERMISSION_KEY = 'push_permission_asked'
 const PUBLIC_PATHS = ['/login', '/auth']
@@ -182,8 +183,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           setIsSettingsOpen(false)
         } else if (msg.type === 'push_notification' && msg.notification) {
           setNotifications((prev) => [msg.notification, ...prev])
+        } else if (msg.type === 'push_token' && typeof msg.token === 'string') {
+          savePushToken(msg.token)
         }
-        // push_token은 백엔드 연동 시 여기서 처리
       } catch {
         // 무시
       }

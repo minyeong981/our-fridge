@@ -74,49 +74,34 @@ export default function CommunityPage() {
 
   const filtered = posts.filter((p) => activeTab === '전체' || p.category === activeTab)
 
-  // 냉장고 없음 — 먼저 만들도록 유도
-  if (!authLoading && !isFridgesLoading && fridges.length === 0) {
-    return (
-      <div className="h-full bg-neutral-50 flex flex-col items-center justify-center gap-6 pb-16 px-8">
-        <p className="text-5xl">🧊</p>
-        <div className="text-center">
-          <p className="text-base font-bold text-neutral-700">아직 냉장고가 없어요</p>
-          <p className="text-sm text-neutral-400 mt-1">커뮤니티를 이용하려면 냉장고가 필요해요</p>
-        </div>
-        <button
-          onClick={() => router.push('/fridges')}
-          className="px-5 py-3 bg-primary text-white text-sm font-semibold rounded-full"
-        >
-          냉장고 만들러 가기
-        </button>
-      </div>
-    )
-  }
+  const noFridge = !authLoading && !isFridgesLoading && fridges.length === 0
 
   return (
     <div className="h-full bg-neutral-50 flex flex-col overflow-hidden">
-      {/* 냉장고 필터 */}
-      <div className="bg-white border-b border-neutral-100 px-4 py-2.5">
-        <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {fridges.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setFridgeFilter(f.id)}
-              className={cn(
-                'shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border',
-                selectedFridgeId === f.id
-                  ? 'bg-neutral-800 text-white border-neutral-800'
-                  : 'bg-white text-neutral-500 border-neutral-200',
-              )}
-            >
-              {f.name}
-            </button>
-          ))}
+      {/* 냉장고 필터 — 냉장고 있을 때만 */}
+      {hasFridges && (
+        <div className="bg-white border-b border-neutral-100 px-4 py-2.5">
+          <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            {fridges.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setFridgeFilter(f.id)}
+                className={cn(
+                  'shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border',
+                  selectedFridgeId === f.id
+                    ? 'bg-neutral-800 text-white border-neutral-800'
+                    : 'bg-white text-neutral-500 border-neutral-200',
+                )}
+              >
+                {f.name}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 카테고리 탭 */}
-      <div className="bg-white border-b border-neutral-100 flex px-4">
+      <div className={cn('bg-white flex px-4', hasFridges && 'border-b border-neutral-100')}>
         {TABS.map((tab) => (
           <button
             key={tab}
@@ -138,6 +123,14 @@ export default function CommunityPage() {
         {isPostsLoading ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          </div>
+        ) : noFridge ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 pb-16">
+            <p className="text-5xl">🧊</p>
+            <div className="text-center">
+              <p className="text-base font-bold text-neutral-700">아직 냉장고가 없어요</p>
+              <p className="text-sm text-neutral-400 mt-1">홈에서 냉장고를 먼저 만들어주세요</p>
+            </div>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 pb-16">

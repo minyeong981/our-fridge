@@ -26,6 +26,7 @@ import {
   deleteComment,
   toggleCommentLike,
   createReport,
+  sendCommentNotification,
 } from '@our-fridge/api'
 import { timeAgo } from '@our-fridge/shared'
 import { useAuth } from '@/contexts/AuthContext'
@@ -129,9 +130,10 @@ export default function CommunityPostDetailPage() {
         content: commentText.trim(),
         parentId: replyingTo?.commentId,
       }),
-    onSuccess: () => {
+    onSuccess: (comment) => {
       queryClient.invalidateQueries({ queryKey: ['comments', postId] })
       queryClient.invalidateQueries({ queryKey: ['post', postId] })
+      sendCommentNotification({ postId, commentId: comment.id, parentId: replyingTo?.commentId })
       setCommentText('')
       setReplyingTo(null)
     },

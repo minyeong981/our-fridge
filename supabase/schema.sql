@@ -243,6 +243,20 @@ create trigger on_auth_user_created
 
 alter table fridges add column if not exists location text;
 
+-- ─── Push Tokens ──────────────────────────────────────────────────────────────
+
+create table if not exists push_tokens (
+  user_id    uuid primary key references auth.users(id) on delete cascade,
+  token      text not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table push_tokens enable row level security;
+
+create policy "push_tokens: 본인 관리" on push_tokens
+  for all using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
 -- ─── Reports ──────────────────────────────────────────────────────────────────
 
 create table if not exists reports (
