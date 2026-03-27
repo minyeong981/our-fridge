@@ -11,10 +11,24 @@ import { timeAgo } from '@our-fridge/shared'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Post } from '@our-fridge/shared'
 
-type TabType = '전체' | '나눔/공유' | '이의 제기/신고'
-const TABS: TabType[] = ['전체', '나눔/공유', '이의 제기/신고']
+type TabType = '전체' | '정보' | '나눔/공유' | '이의 제기/신고'
+const TABS: TabType[] = ['전체', '정보', '나눔/공유', '이의 제기/신고']
+const TAB_LABEL: Record<TabType, string> = {
+  전체: '전체',
+  정보: '정보',
+  '나눔/공유': '나눔/공유',
+  '이의 제기/신고': '이의 제기/신고',
+}
 
-function Avatar({ name, avatarUrl, size = 6 }: { name: string | null; avatarUrl: string | null; size?: number }) {
+function Avatar({
+  name,
+  avatarUrl,
+  size = 6,
+}: {
+  name: string | null
+  avatarUrl: string | null
+  size?: number
+}) {
   if (avatarUrl) {
     return (
       <img
@@ -26,7 +40,9 @@ function Avatar({ name, avatarUrl, size = 6 }: { name: string | null; avatarUrl:
     )
   }
   return (
-    <div className={`w-${size} h-${size} rounded-full bg-neutral-100 flex items-center justify-center shrink-0`}>
+    <div
+      className={`w-${size} h-${size} rounded-full bg-neutral-100 flex items-center justify-center shrink-0`}
+    >
       <span className="text-[10px] font-bold text-neutral-500">{name?.[0] ?? '?'}</span>
     </div>
   )
@@ -55,9 +71,7 @@ export default function CommunityPage() {
     enabled: !!selectedFridgeId,
   })
 
-  const filtered = posts.filter((p) =>
-    activeTab === '전체' || p.category === activeTab,
-  )
+  const filtered = posts.filter((p) => activeTab === '전체' || p.category === activeTab)
 
   // 냉장고 없음 — 먼저 만들도록 유도
   if (!authLoading && !isFridgesLoading && fridges.length === 0) {
@@ -111,7 +125,7 @@ export default function CommunityPage() {
               activeTab === tab ? 'text-neutral-800' : 'text-neutral-400',
             )}
           >
-            {tab}
+            {TAB_LABEL[tab]}
             {activeTab === tab && (
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-800 rounded-full" />
             )}
@@ -144,7 +158,9 @@ export default function CommunityPage() {
 
       {hasFridges && (
         <button
-          onClick={() => selectedFridgeId && router.push(`/community/write?fridgeId=${selectedFridgeId}`)}
+          onClick={() =>
+            selectedFridgeId && router.push(`/community/write?fridgeId=${selectedFridgeId}`)
+          }
           className="fixed bottom-4 right-4 w-12 h-12 bg-primary text-white rounded-full shadow-lg shadow-primary/30 flex items-center justify-center z-40"
         >
           <PenLine size={18} strokeWidth={2.5} />
@@ -160,16 +176,29 @@ function PostCard({ post, onClick }: { post: Post; onClick: () => void }) {
       onClick={onClick}
       className="bg-white rounded-2xl border border-neutral-100 px-4 py-4 cursor-pointer active:bg-neutral-50 transition-colors"
     >
-      <span className={cn('text-[11px] font-bold px-2 py-0.5 rounded-full mb-1.5 inline-block', CATEGORY_STYLE[post.category as PostCategory])}>
+      <span
+        className={cn(
+          'text-[11px] font-bold px-2 py-0.5 rounded-full mb-1.5 inline-block',
+          CATEGORY_STYLE[post.category as PostCategory],
+        )}
+      >
         {post.category}
       </span>
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-sm text-neutral-800 line-clamp-2 leading-snug">{post.title}</p>
-          <p className="text-xs text-neutral-500 mt-1 line-clamp-2 leading-relaxed">{post.content}</p>
+          <p className="font-bold text-sm text-neutral-800 line-clamp-2 leading-snug">
+            {post.title}
+          </p>
+          <p className="text-xs text-neutral-500 mt-1 line-clamp-2 leading-relaxed">
+            {post.content}
+          </p>
         </div>
         {post.imageUrls[0] && (
-          <img src={post.imageUrls[0]} alt="" className="w-16 h-16 rounded-xl object-cover shrink-0" />
+          <img
+            src={post.imageUrls[0]}
+            alt=""
+            className="w-16 h-16 rounded-xl object-cover shrink-0"
+          />
         )}
       </div>
       <div className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-50">

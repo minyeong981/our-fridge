@@ -20,7 +20,9 @@ export type CreateFridgeInput = Pick<Fridge, 'name'> & {
   rules?: string | null
 }
 
-export type UpdateFridgeInput = Partial<Pick<Fridge, 'name' | 'emoji' | 'location' | 'description' | 'rules' | 'notice'>>
+export type UpdateFridgeInput = Partial<
+  Pick<Fridge, 'name' | 'emoji' | 'location' | 'description' | 'rules' | 'notice'>
+>
 
 // ─── Membership ───────────────────────────────────────────────────────────────
 
@@ -84,7 +86,7 @@ export type CreateItemLogInput = Pick<ItemLog, 'itemId' | 'action'> & {
 
 // ─── Community ────────────────────────────────────────────────────────────────
 
-export type PostCategory = '나눔/공유' | '이의 제기/신고' | '정보/메시지'
+export type PostCategory = '정보' | '나눔/공유' | '이의 제기/신고'
 
 export type Post = {
   id: string
@@ -113,7 +115,9 @@ export type CreatePostInput = {
   imageUrls?: string[]
 }
 
-export type UpdatePostInput = Partial<Pick<Post, 'category' | 'title' | 'content' | 'isAnonymous' | 'imageUrls'>>
+export type UpdatePostInput = Partial<
+  Pick<Post, 'category' | 'title' | 'content' | 'isAnonymous' | 'imageUrls'>
+>
 
 export type Comment = {
   id: string

@@ -122,16 +122,21 @@ export default function MyPage() {
           <ChevronRight size={14} className="text-neutral-300" />
         </button>
 
-        <a
-          href="https://docs.google.com/spreadsheets/d/1WQEYHQSMtzsKn2GJWPcAVHYbnGer8q4yp9H5oyas3Ak/edit?usp=sharing"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={() => {
+            const url = 'https://docs.google.com/spreadsheets/d/1WQEYHQSMtzsKn2GJWPcAVHYbnGer8q4yp9H5oyas3Ak/edit?usp=sharing'
+            if (typeof window !== 'undefined' && (window as any).ReactNativeWebView) {
+              ;(window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'open_url', url }))
+            } else {
+              window.open(url, '_blank')
+            }
+          }}
           className="w-full flex items-center gap-3 px-5 py-4"
         >
           <MessageSquare size={16} className="text-neutral-400 shrink-0" />
           <span className="flex-1 text-sm font-semibold text-neutral-800 text-left">문의하기</span>
           <ChevronRight size={14} className="text-neutral-300" />
-        </a>
+        </button>
 
         <div className="flex items-center gap-3 px-5 py-4">
           <Info size={16} className="text-neutral-400 shrink-0" />

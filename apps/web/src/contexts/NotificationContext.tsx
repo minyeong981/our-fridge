@@ -180,6 +180,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         } else if (msg.type === 'close_panel') {
           setIsPanelOpen(false)
           setIsSettingsOpen(false)
+        } else if (msg.type === 'push_notification' && msg.notification) {
+          setNotifications((prev) => [msg.notification, ...prev])
         }
         // push_token은 백엔드 연동 시 여기서 처리
       } catch {

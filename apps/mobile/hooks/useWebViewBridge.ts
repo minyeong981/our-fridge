@@ -1,4 +1,5 @@
 import { Appearance } from 'react-native'
+import * as Linking from 'expo-linking'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { WebView } from 'react-native-webview'
 import type React from 'react'
@@ -76,6 +77,8 @@ export function handleWebMessage(
       const scheme = msg.theme === 'dark' ? 'dark' : msg.theme === 'light' ? 'light' : null
       Appearance.setColorScheme(scheme as 'dark' | 'light' | null)
       AsyncStorage.setItem('app_theme', msg.theme)
+    } else if (msg.type === 'open_url' && typeof msg.url === 'string') {
+      Linking.openURL(msg.url)
     }
   } catch {
     // 파싱 실패 무시
