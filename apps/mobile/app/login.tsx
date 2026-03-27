@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   View,
   Text,
+  Image,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
@@ -11,8 +12,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import * as WebBrowser from 'expo-web-browser'
 import * as Linking from 'expo-linking'
-import Svg, { Path } from 'react-native-svg'
-import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { supabase } from '@/lib/supabase'
 
 WebBrowser.maybeCompleteAuthSession()
@@ -85,7 +84,7 @@ export default function LoginScreen() {
         {/* 로고 */}
         <View style={styles.header}>
           <View style={styles.logoBox}>
-            <MaterialCommunityIcons name="fridge-outline" size={36} color="#4AB8CF" />
+            <Image source={require('../assets/images/our-fridge-icon.png')} style={styles.logoImage} />
           </View>
           <Text style={styles.title}>우리의 냉장고</Text>
           <Text style={styles.subtitle}>공용 냉장고를 함께 관리해요</Text>
@@ -187,6 +186,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: 64,
+    height: 64,
   },
 title: {
     fontSize: 20,
