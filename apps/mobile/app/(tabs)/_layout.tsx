@@ -5,7 +5,7 @@ import { Tabs, useRouter } from 'expo-router'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import * as Linking from 'expo-linking'
 import * as Notifications from 'expo-notifications'
-import { setActiveTab, navigateWebView, dispatchClosePanel, homeWebViewRef, communityWebViewRef, myWebViewRef } from '@/lib/webViewRefs'
+import { setActiveTab, navigateWebView, dispatchClosePanel, injectToActive, homeWebViewRef, communityWebViewRef, myWebViewRef } from '@/lib/webViewRefs'
 import { useNotificationSetup } from '@/hooks/useNotificationSetup'
 
 function toWebPath(url: string): string {
@@ -75,6 +75,38 @@ export default function TabLayout() {
     return () => sub.remove()
   }, [router])
 
+  // 포그라운드 알림 수신 → 웹 알림 목록에 추가
+  useEffect(() => {
+    const sub = Notifications.addNotificationReceivedListener((notification) => {
+      const { title, body, data } = notification.request.content
+      const category = data?.category as string | undefined
+      const url = data?.url as string | undefined
+      const typeMap: Record<string, string> = {
+        expiry: 'expiry', notice: 'notice', comment: 'comment', invite: 'invite',
+      }
+      const msg = JSON.stringify({
+        type: 'push_notification',
+        notification: {
+          id: `push_${Date.now()}`,
+          type: typeMap[category ?? ''] ?? 'item',
+          title: title ?? '',
+          body: body ?? '',
+          createdAt: new Date().toISOString(),
+          isRead: false,
+          link: url,
+        },
+      })
+      const js = `
+        (function(){
+          window.dispatchEvent(new MessageEvent('message', { data: ${JSON.stringify(msg)} }));
+        })();
+        true;
+      `
+      injectToActive(js)
+    })
+    return () => sub.remove()
+  }, [])
+
   return (
     <Tabs
       screenOptions={{
@@ -107,7 +139,7 @@ export default function TabLayout() {
         name="community"
         options={{
           title: '커뮤니티',
-          tabBarIcon: ({ color, size }) => <Ionicons name="newspaper-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="chatbubbles-outline" size={size} color={color} />,
         }}
         listeners={{ focus: () => setActiveTab('community'), blur: () => dispatchClosePanel(communityWebViewRef) }}
       />
