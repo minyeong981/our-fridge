@@ -62,17 +62,24 @@ function isAllowed(category: string | undefined, s: NotifSettings): boolean {
   }
 }
 
+// Android 알림 채널 설정 — 에뮬레이터 포함, 실기기 여부 무관하게 실행
+async function setupAndroidChannel() {
+  if (Platform.OS !== 'android') return
+  await Notifications.setNotificationChannelAsync('default', {
+    name: '기본 알림',
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: [0, 250, 250, 250],
+    lightColor: '#4AB8CF',
+  })
+}
+
+// 앱 시작 시 채널 초기화 (fire & forget)
+setupAndroidChannel()
+
 async function getPushToken(): Promise<string | null> {
   if (!Device.isDevice) return null
 
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: '기본 알림',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#4AB8CF',
-    })
-  }
+  await setupAndroidChannel()
 
   const projectId =
     Constants.expoConfig?.extra?.eas?.projectId ??
@@ -98,6 +105,13 @@ async function getTokenIfGranted(): Promise<string | null> {
 
 // 테스트용 로컬 알림 — 3초 뒤 발송
 export async function scheduleTestNotification(): Promise<void> {
+  await setupAndroidChannel()
+  const { status: existing } = await Notifications.getPermissionsAsync()
+  const finalStatus = existing === 'granted'
+    ? existing
+    : (await Notifications.requestPermissionsAsync()).status
+  if (finalStatus !== 'granted') return
+
   await Notifications.scheduleNotificationAsync({
     content: {
       title: '테스트 알림 🔔',
