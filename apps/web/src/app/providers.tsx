@@ -11,7 +11,16 @@ initSupabase(createClient())
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { staleTime: 60 * 1000 } } }),
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 3 * 60 * 1000,   // 3분간 캐시 신선
+            refetchOnWindowFocus: false, // 포커스 복귀 시 자동 refetch 끔
+            refetchOnReconnect: true,    // 네트워크 재연결 시엔 갱신
+          },
+        },
+      }),
   )
 
   return (
