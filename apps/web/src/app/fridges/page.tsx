@@ -61,7 +61,7 @@ export default function FridgesPage() {
         </div>
       ) : (
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="max-w-lg mx-auto w-full px-4 py-5 pb-24 flex flex-col gap-3">
+          <div className="max-w-lg mx-auto w-full px-4 py-5 pb-20 flex flex-col gap-3">
             {fridgeCards.map((fridge) => (
               <FridgeCard
                 key={fridge.id}
@@ -81,7 +81,7 @@ export default function FridgesPage() {
       {!isEmpty && (
         <button
           onClick={() => setIsModalOpen(true)}
-          className="fixed bottom-20 right-4 flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/30 font-semibold text-sm z-40"
+          className="fixed bottom-5 right-4 flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/30 font-semibold text-sm z-40"
         >
           <Plus size={18} strokeWidth={2.5} />
           냉장고 추가

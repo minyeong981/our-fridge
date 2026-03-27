@@ -130,7 +130,7 @@ export default function CommunityPage() {
             <p className="text-base font-semibold text-neutral-500">아직 게시글이 없어요</p>
           </div>
         ) : (
-          <div className="max-w-lg mx-auto w-full px-4 py-4 pb-24 flex flex-col gap-3">
+          <div className="max-w-lg mx-auto w-full px-4 py-4 pb-20 flex flex-col gap-3">
             {filtered.map((post) => (
               <PostCard
                 key={post.id}
@@ -145,7 +145,7 @@ export default function CommunityPage() {
       {hasFridges && (
         <button
           onClick={() => selectedFridgeId && router.push(`/community/write?fridgeId=${selectedFridgeId}`)}
-          className="fixed bottom-20 right-4 w-12 h-12 bg-primary text-white rounded-full shadow-lg shadow-primary/30 flex items-center justify-center z-40"
+          className="fixed bottom-5 right-4 w-12 h-12 bg-primary text-white rounded-full shadow-lg shadow-primary/30 flex items-center justify-center z-40"
         >
           <PenLine size={18} strokeWidth={2.5} />
         </button>

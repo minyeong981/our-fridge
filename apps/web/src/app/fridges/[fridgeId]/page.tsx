@@ -237,7 +237,7 @@ export default function FridgeDetailPage() {
       <div className="flex-1 relative overflow-hidden min-h-0">
         {/* 스크롤 가능한 메인 콘텐츠 */}
         <div className="absolute inset-0 overflow-y-auto">
-          <div className="max-w-lg mx-auto w-full flex flex-col gap-2 pt-4 pb-24">
+          <div className="max-w-lg mx-auto w-full flex flex-col gap-2 pt-4 pb-20">
             {/* 공지 — 드롭다운 아코디언 */}
             {hasNotice && (
               <div className="mx-4">
@@ -558,7 +558,7 @@ export default function FridgeDetailPage() {
 
       <button
         onClick={() => router.push(`/fridges/${fridgeId}/add`)}
-        className="fixed bottom-20 right-4 flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/30 font-semibold text-sm z-40"
+        className="fixed bottom-5 right-4 flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/30 font-semibold text-sm z-40"
       >
         <Plus size={18} strokeWidth={2.5} />
         추가
