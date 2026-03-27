@@ -63,14 +63,14 @@ export default function CommunityPage() {
   if (!authLoading && !isFridgesLoading && fridges.length === 0) {
     return (
       <div className="h-full bg-neutral-50 flex flex-col items-center justify-center gap-6 pb-16 px-8">
-        <p className="text-4xl">🧊</p>
+        <p className="text-5xl">🧊</p>
         <div className="text-center">
-          <p className="text-sm font-bold text-neutral-700 mb-1">아직 냉장고가 없어요</p>
-          <p className="text-xs text-neutral-400">커뮤니티를 이용하려면 냉장고가 필요해요</p>
+          <p className="text-base font-bold text-neutral-700">아직 냉장고가 없어요</p>
+          <p className="text-sm text-neutral-400 mt-1">커뮤니티를 이용하려면 냉장고가 필요해요</p>
         </div>
         <button
           onClick={() => router.push('/fridges')}
-          className="px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-2xl"
+          className="px-5 py-3 bg-primary text-white text-sm font-semibold rounded-full"
         >
           냉장고 만들러 가기
         </button>
@@ -126,8 +126,8 @@ export default function CommunityPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 pb-16">
-            <p className="text-3xl">📭</p>
-            <p className="text-sm text-neutral-400">아직 게시글이 없어요</p>
+            <p className="text-5xl">📭</p>
+            <p className="text-base font-semibold text-neutral-500">아직 게시글이 없어요</p>
           </div>
         ) : (
           <div className="max-w-lg mx-auto w-full px-4 py-4 pb-24 flex flex-col gap-3">

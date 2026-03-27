@@ -70,8 +70,8 @@ export default function MyPostsPage() {
           </div>
         ) : posts.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-4 pb-16">
-            <p className="text-3xl">📝</p>
-            <p className="text-sm text-neutral-400">작성한 게시글이 없어요</p>
+            <p className="text-5xl">📝</p>
+            <p className="text-base font-semibold text-neutral-500">작성한 게시글이 없어요</p>
           </div>
         ) : (
           <div className="max-w-lg mx-auto w-full px-4 py-4 flex flex-col gap-3">

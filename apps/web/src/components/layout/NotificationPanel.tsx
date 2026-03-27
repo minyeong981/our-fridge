@@ -73,8 +73,8 @@ export function NotificationPanel() {
         <div className="flex-1 overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 pb-16">
-              <Bell size={32} className="text-neutral-200" />
-              <p className="text-sm text-neutral-400">알림이 없습니다</p>
+              <Bell size={40} className="text-neutral-300" />
+              <p className="text-base font-semibold text-neutral-500">알림이 없습니다</p>
             </div>
           ) : (
             <>
