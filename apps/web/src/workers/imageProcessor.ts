@@ -15,5 +15,5 @@ self.onmessage = async (e: MessageEvent<{ bitmap: ImageBitmap }>) => {
   const blob = await canvas.convertToBlob({ type: 'image/webp', quality: QUALITY })
   const arrayBuffer = await blob.arrayBuffer()
 
-  ;(self as unknown as DedicatedWorkerGlobalScope).postMessage({ arrayBuffer }, [arrayBuffer])
+  ;(self as unknown as { postMessage(msg: unknown, transfer: Transferable[]): void }).postMessage({ arrayBuffer }, [arrayBuffer])
 }
