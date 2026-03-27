@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-interface FridgeDetailState {
+export interface FridgeDetailState {
   fridgeName: string
   fridgeLocation: string
   isSidePanelOpen: boolean
