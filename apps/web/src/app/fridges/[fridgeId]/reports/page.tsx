@@ -1,8 +1,9 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
-import { ChevronLeft, Flag } from 'lucide-react'
+import { useParams } from 'next/navigation'
+import { Flag } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { BackHeader } from '@/components/layout/BackHeader'
 import { getReports, updateReportStatus } from '@our-fridge/api'
 import { timeAgo } from '@our-fridge/shared'
 import { cn } from '@/lib/utils'
@@ -27,7 +28,6 @@ const TARGET_LABEL: Record<string, string> = {
 
 export default function ReportsPage() {
   const { fridgeId } = useParams<{ fridgeId: string }>()
-  const router = useRouter()
   const queryClient = useQueryClient()
 
   const { data: reports = [], isLoading } = useQuery({
@@ -46,13 +46,7 @@ export default function ReportsPage() {
 
   return (
     <div className="h-full bg-neutral-50 flex flex-col overflow-hidden">
-      {/* 헤더 */}
-      <div className="bg-white border-b border-neutral-100 flex items-center gap-2 px-4 py-3 shrink-0">
-        <button onClick={() => router.back()} className="p-1 -ml-1">
-          <ChevronLeft size={22} className="text-neutral-700" />
-        </button>
-        <h1 className="text-base font-bold text-neutral-800 flex-1">신고 내역</h1>
-      </div>
+      <BackHeader title="신고 내역" hideActions />
 
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
