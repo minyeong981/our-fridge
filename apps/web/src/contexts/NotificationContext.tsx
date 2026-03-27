@@ -177,6 +177,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         const msg = JSON.parse(typeof e.data === 'string' ? e.data : JSON.stringify(e.data))
         if (msg.type === 'navigate' && typeof msg.url === 'string') {
           router.push(msg.url)
+        } else if (msg.type === 'close_panel') {
+          setIsPanelOpen(false)
+          setIsSettingsOpen(false)
         }
         // push_token은 백엔드 연동 시 여기서 처리
       } catch {

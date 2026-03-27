@@ -175,6 +175,9 @@ export default function MyPage() {
                 key={t}
                 onClick={() => {
                   setTheme(t)
+                  if (typeof window !== 'undefined' && (window as any).ReactNativeWebView) {
+                    ;(window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'theme_change', theme: t }))
+                  }
                   setShowThemeSheet(false)
                 }}
                 className={cn(
