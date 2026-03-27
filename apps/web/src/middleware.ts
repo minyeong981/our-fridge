@@ -24,34 +24,10 @@ export async function middleware(request: NextRequest) {
   )
 
   // 세션 갱신 (반드시 getUser 호출해야 토큰 자동 갱신됨)
-  const { data: { user } } = await supabase.auth.getUser()
+  await supabase.auth.getUser()
 
-  const pathname = request.nextUrl.pathname
-
-  // 공개 경로 (인증 불필요)
-  const isPublicPath =
-    pathname.startsWith('/login') ||
-    pathname.startsWith('/auth/') ||
-    pathname.startsWith('/invite/')
-
-  // RN 앱 WebView는 세션을 클라이언트 주입 방식으로 처리 — 서버 리다이렉트 건너뜀
-  const userAgent = request.headers.get('user-agent') ?? ''
-  const isRNWebView = userAgent.includes('OurFridgeApp')
-
-  // 로그인 안 됐는데 보호된 경로 접근 → 로그인으로
-  if (!user && !isPublicPath && !isRNWebView) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
-  }
-
-  // 로그인됐는데 /login 접근 → 메인으로
-  if (user && pathname === '/login') {
-    const url = request.nextUrl.clone()
-    url.pathname = '/fridges'
-    return NextResponse.redirect(url)
-  }
-
+  // 인증은 RN 앱이 처리 — 서버 사이드 리다이렉트 없음
+  // 데이터 보호는 Supabase RLS 정책으로 처리됨
   return supabaseResponse
 }
 

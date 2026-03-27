@@ -33,15 +33,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     supabase.auth.getSession().then(async ({ data }) => {
-      // 세션이 없으면 RN에서 주입된 세션 시도
-      if (!data.session) await handleRNSession()
-
-      supabase.auth.getSession().then(({ data: d }) => {
-        const u = d.session?.user ?? null
-        setUser(u)
-        if (u) loadProfile(supabase, u.id)
-        else setLoading(false)
-      })
+      if (data.session) {
+        // 브라우저 쿠키에 세션 있음
+        setUser(data.session.user)
+        loadProfile(supabase, data.session.user.id)
+      } else if (typeof window !== 'undefined' && (window as any).ReactNativeWebView) {
+        // RN WebView — rn-session-ready 이벤트까지 loading 유지
+      } else {
+        // 일반 브라우저 — 세션 없음
+        setLoading(false)
+      }
     })
 
     // RN 세션 주입 이벤트 리스너
