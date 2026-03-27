@@ -15,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ourfridge.app"
+      "bundleIdentifier": "com.ourfridge.app",
+      "infoPlist": {
+        "NSUserNotificationsUsageDescription": "유통기한 임박, 냉장고 초대, 댓글 알림을 받으려면 알림 권한이 필요해요."
+      }
     },
     "android": {
       "adaptiveIcon": {
