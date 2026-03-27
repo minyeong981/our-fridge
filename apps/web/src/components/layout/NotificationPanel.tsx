@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'next/navigation'
 import { useNotification, type NotifType } from '@/contexts/NotificationContext'
 import { cn } from '@/lib/utils'
+import { timeAgo } from '@our-fridge/shared'
 
 const TYPE_ICON: Record<NotifType, React.ReactNode> = {
   expiry: <Package size={15} className="text-amber-500" />,
@@ -106,7 +107,7 @@ export function NotificationPanel() {
                           : n.title}
                       </p>
                       <p className="text-xs text-neutral-500 mt-0.5 leading-relaxed">{n.body}</p>
-                      <p className="text-[11px] text-neutral-400 mt-1">{n.createdAt}</p>
+                      <p className="text-[11px] text-neutral-400 mt-1">{timeAgo(n.createdAt)}</p>
                     </div>
 
                     <div className="flex items-center shrink-0 mt-0.5">
