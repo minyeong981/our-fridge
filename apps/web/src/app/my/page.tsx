@@ -17,8 +17,8 @@ import {
   MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { useAuth } from '@/contexts/AuthContext'
+import { WithdrawalModal } from '@/components/my/WithdrawalModal'
 
 const THEME_LABEL: Record<string, string> = {
   light: '라이트',
@@ -251,17 +251,9 @@ export default function MyPage() {
         </>
       )}
 
-      {/* 탈퇴 확인 모달 */}
-      <ConfirmModal
+      <WithdrawalModal
         isOpen={showWithdrawConfirm}
-        title="정말 탈퇴할까요?"
-        description="탈퇴 시 작성한 게시글과 댓글이 모두 삭제되며 복구할 수 없어요."
-        confirmLabel="탈퇴하기"
-        onConfirm={() => {
-          /* 탈퇴 처리 */
-        }}
-        onCancel={() => setShowWithdrawConfirm(false)}
-        destructive
+        onClose={() => setShowWithdrawConfirm(false)}
       />
     </div>
   )
