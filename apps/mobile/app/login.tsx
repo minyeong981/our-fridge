@@ -12,7 +12,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import * as WebBrowser from 'expo-web-browser'
 import * as Linking from 'expo-linking'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '@/lib/supabase'
+
+const TERMS_KEY = 'terms_agreed_v1'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -69,7 +72,8 @@ export default function LoginScreen() {
     try {
       const ok = await signInWithProvider(provider)
       if (ok) {
-        router.replace('/(tabs)/home')
+        const agreed = await AsyncStorage.getItem(TERMS_KEY)
+        router.replace(agreed ? '/(tabs)/home' : '/terms-agreement')
       } else {
         Alert.alert('로그인 실패', '다시 시도해 주세요.')
       }

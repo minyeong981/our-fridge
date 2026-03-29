@@ -6,7 +6,6 @@ import { NotificationProvider } from '@/contexts/NotificationContext'
 import { NotificationPanel } from '@/components/layout/NotificationPanel'
 import { NotificationSettings } from '@/components/layout/NotificationSettings'
 import { PushPermissionSheet } from '@/components/layout/PushPermissionSheet'
-import { TermsAgreementSheet } from '@/components/layout/TermsAgreementSheet'
 import { AuthProvider } from '@/contexts/AuthContext'
 
 export const metadata: Metadata = {
@@ -27,7 +26,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <NotificationPanel />
             <NotificationSettings />
             <PushPermissionSheet />
-            <TermsAgreementSheet />
           </NotificationProvider>
         </AuthProvider>
       </body>
