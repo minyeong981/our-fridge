@@ -28,7 +28,24 @@
         "monochromeImage": "./assets/images/our-fridge-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.ourfridge.app"
+      "package": "com.ourfridge.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "ourfridge.app",
+              "pathPrefix": "/invite/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "plugins": [
       "expo-router",

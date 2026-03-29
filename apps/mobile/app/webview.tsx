@@ -7,12 +7,10 @@ import {
   useNotificationSetup,
   updateNotifHandlerSettings,
   requestPermissionAndGetToken,
-  scheduleTestNotification,
 } from '@/hooks/useNotificationSetup'
 import type { NotifSettings } from '@/hooks/useNotificationSetup'
 
-// Android 에뮬레이터: 10.0.2.2 | 실기기(같은 WiFi): PC IP
-const WEB_URL = 'http://192.168.45.52:3000'
+import { WEB_URL } from '@/lib/webViewRefs'
 
 function toWebPath(url: string): string {
   if (url.startsWith('http')) {
@@ -93,8 +91,6 @@ export default function WebViewScreen() {
       const msg = JSON.parse(event.nativeEvent.data)
       if (msg.type === 'notif_settings') {
         updateNotifHandlerSettings(msg.data as NotifSettings)
-      } else if (msg.type === 'test_notification') {
-        scheduleTestNotification()
       } else if (msg.type === 'pick_image') {
         const source = msg.source as 'camera' | 'gallery'
         pickImage(source).then((base64) => {
