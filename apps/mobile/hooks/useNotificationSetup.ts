@@ -103,25 +103,6 @@ async function getTokenIfGranted(): Promise<string | null> {
   return getPushToken()
 }
 
-// 테스트용 로컬 알림 — 3초 뒤 발송
-export async function scheduleTestNotification(): Promise<void> {
-  await setupAndroidChannel()
-  const { status: existing } = await Notifications.getPermissionsAsync()
-  const finalStatus = existing === 'granted'
-    ? existing
-    : (await Notifications.requestPermissionsAsync()).status
-  if (finalStatus !== 'granted') return
-
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: '테스트 알림 🔔',
-      body: '알림이 정상적으로 동작하고 있어요.',
-      data: { category: 'expiry', url: '/fridges/1/items/i1' },
-    },
-    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 3 },
-  })
-}
-
 // 웹의 request_push_permission 메시지 수신 시 호출 — OS 다이얼로그 표시
 export async function requestPermissionAndGetToken(): Promise<string | null> {
   if (!Device.isDevice) return null

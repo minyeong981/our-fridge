@@ -37,46 +37,6 @@ const DEFAULT_SETTINGS: NotifSettings = {
   communityReport: true,
 }
 
-const now = new Date()
-const INITIAL_NOTIFICATIONS: Notification[] = [
-  {
-    id: 'n1',
-    type: 'expiry',
-    title: '유통기한 임박',
-    body: '유기농 갈라 사과가 내일 만료돼요.',
-    createdAt: new Date(now.getTime() - 1 * 60 * 1000).toISOString(),
-    isRead: false,
-    link: '/fridges/1/items/i1',
-  },
-  {
-    id: 'n2',
-    type: 'comment',
-    title: '새 댓글',
-    body: 'Sarah J.님이 회원님의 게시글에 댓글을 남겼어요.',
-    createdAt: new Date(now.getTime() - 10 * 60 * 1000).toISOString(),
-    isRead: false,
-    link: '/community/p1',
-  },
-  {
-    id: 'n3',
-    type: 'notice',
-    title: '냉장고 공지사항',
-    body: '이번 주말 냉장고 청소 예정입니다.',
-    createdAt: new Date(now.getTime() - 60 * 60 * 1000).toISOString(),
-    isRead: false,
-    link: '/fridges/1',
-    fridgeName: '거실 냉장고',
-  },
-  {
-    id: 'n4',
-    type: 'invite',
-    title: '냉장고 초대',
-    body: 'Marcus L.님이 사무실 냉장고에 초대했어요.',
-    createdAt: new Date(now.getTime() - 25 * 60 * 60 * 1000).toISOString(),
-    isRead: true,
-    link: '/invite/MOCK_CODE_2',
-  },
-]
 
 export interface NotificationState {
   notifications: Notification[]
@@ -111,8 +71,8 @@ function setNotifications(notifications: Notification[]) {
 }
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
-  notifications: INITIAL_NOTIFICATIONS,
-  unreadCount: countUnread(INITIAL_NOTIFICATIONS),
+  notifications: [],
+  unreadCount: 0,
   isPanelOpen: false,
   isSettingsOpen: false,
   isPushPermissionSheetOpen: false,
