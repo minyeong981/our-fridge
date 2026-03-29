@@ -125,9 +125,15 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.legal}>
-          로그인 시 서비스 이용약관 및{'\n'}개인정보처리방침에 동의하게 됩니다.
-        </Text>
+        <View style={styles.legalRow}>
+          <TouchableOpacity onPress={() => Linking.openURL('https://www.notion.so/3300d8d7efe380b59bfce25f34226368')}>
+            <Text style={styles.legalLink}>이용약관</Text>
+          </TouchableOpacity>
+          <Text style={styles.legalSep}>·</Text>
+          <TouchableOpacity onPress={() => Linking.openURL('https://www.notion.so/3300d8d7efe380a79f3dcfc9ea0c7274')}>
+            <Text style={styles.legalLink}>개인정보처리방침</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   )
@@ -245,5 +251,23 @@ title: {
     textAlign: 'center',
     lineHeight: 18,
     marginTop: 32,
+  },
+  legalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 32,
+  },
+  legalLink: {
+    fontSize: 12,
+    fontFamily: 'Pretendard-Regular',
+    color: '#9CA3AF',
+    textDecorationLine: 'underline',
+  },
+  legalSep: {
+    fontSize: 12,
+    fontFamily: 'Pretendard-Regular',
+    color: '#D1D5DB',
   },
 })
