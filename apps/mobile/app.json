@@ -7,7 +7,9 @@
     "scheme": "ourfridge",
     "icon": "./assets/images/our-fridge-icon.png",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "splash": {
       "image": "./assets/images/our-fridge-icon.png",
       "resizeMode": "contain",
@@ -53,6 +55,12 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "fb47d863-1cfa-4737-a716-6227ab7fb227"
+      }
+    }
   }
 }
