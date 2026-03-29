@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/useAuthStore'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { setUser, setProfile, setLoading } = useAuthStore()
+  const { setUser, setProfile, setLoading, setTermsAgreed } = useAuthStore()
 
   useEffect(() => {
     const supabase = createClient()
@@ -30,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           createdAt: data.created_at,
           updatedAt: data.updated_at,
         })
+        setTermsAgreed(!!data.terms_agreed_at)
       }
       setLoading(false)
     }

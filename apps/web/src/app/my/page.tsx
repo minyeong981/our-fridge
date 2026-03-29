@@ -111,16 +111,26 @@ export default function MyPage() {
           <ChevronRight size={14} className="text-neutral-300" />
         </button>
 
-        <button
-          onClick={() => router.push('/my/policy')}
-          className="w-full flex items-center gap-3 px-5 py-4"
-        >
-          <FileText size={16} className="text-neutral-400 shrink-0" />
-          <span className="flex-1 text-sm font-semibold text-neutral-800 text-left">
-            약관 및 정책
-          </span>
-          <ChevronRight size={14} className="text-neutral-300" />
-        </button>
+        {[
+          { label: '이용약관', url: 'https://www.notion.so/3300d8d7efe380b59bfce25f34226368' },
+          { label: '개인정보처리방침', url: 'https://www.notion.so/3300d8d7efe380a79f3dcfc9ea0c7274' },
+        ].map(({ label, url }) => (
+          <button
+            key={label}
+            onClick={() => {
+              if (typeof window !== 'undefined' && (window as any).ReactNativeWebView) {
+                ;(window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'open_url', url }))
+              } else {
+                window.open(url, '_blank')
+              }
+            }}
+            className="w-full flex items-center gap-3 px-5 py-4"
+          >
+            <FileText size={16} className="text-neutral-400 shrink-0" />
+            <span className="flex-1 text-sm font-semibold text-neutral-800 text-left">{label}</span>
+            <ChevronRight size={14} className="text-neutral-300" />
+          </button>
+        ))}
 
         <button
           onClick={() => {
