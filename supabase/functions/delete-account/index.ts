@@ -1,9 +1,20 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   try {
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) return new Response('unauthorized', { status: 401 })
+    if (!authHeader) {
+      return new Response('unauthorized', { status: 401, headers: corsHeaders })
+    }
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -14,7 +25,9 @@ Deno.serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(
       authHeader.replace('Bearer ', ''),
     )
-    if (userError || !user) return new Response('unauthorized', { status: 401 })
+    if (userError || !user) {
+      return new Response('unauthorized', { status: 401, headers: corsHeaders })
+    }
 
     const userId = user.id
 
@@ -29,7 +42,7 @@ Deno.serve(async (req) => {
     // 2. 멤버십 삭제
     await supabase.from('memberships').delete().eq('user_id', userId)
 
-    // 3. 멤버가 0인 냉장고 삭제 (유저가 유일한 멤버였던 경우)
+    // 3. 멤버가 0인 냉장고 삭제
     if (fridgeIds.length > 0) {
       const { data: remaining } = await supabase
         .from('memberships')
@@ -47,13 +60,12 @@ Deno.serve(async (req) => {
     // 4. 푸시 토큰 삭제
     await supabase.from('push_tokens').delete().eq('user_id', userId)
 
-    // 5. auth 유저 삭제 (profiles는 cascade로 삭제됨)
-    //    posts/comments의 author_id는 orphan으로 남아 "탈퇴한 사용자"로 표시됨
+    // 5. auth 유저 삭제 (profiles cascade 삭제)
     const { error: deleteError } = await supabase.auth.admin.deleteUser(userId)
     if (deleteError) throw deleteError
 
-    return new Response('ok', { status: 200 })
+    return new Response('ok', { status: 200, headers: corsHeaders })
   } catch (e) {
-    return new Response(String(e), { status: 500 })
+    return new Response(String(e), { status: 500, headers: corsHeaders })
   }
 })
