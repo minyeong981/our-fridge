@@ -135,7 +135,12 @@ export async function getAdminFridgesNeedingDelegation(): Promise<FridgeNeedingD
 }
 
 export async function deleteAccount(): Promise<void> {
-  const { error } = await supabase.functions.invoke('delete-account')
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) throw new Error('unauthenticated')
+
+  const { error } = await supabase.functions.invoke('delete-account', {
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  })
   if (error) throw error
 }
 
