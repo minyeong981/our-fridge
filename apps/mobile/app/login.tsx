@@ -85,8 +85,8 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        {/* 로고 */}
-        <View style={styles.header}>
+        {/* 로고 — 화면 중앙 */}
+        <View style={styles.hero}>
           <View style={styles.logoBox}>
             <Image source={require('../assets/images/our-fridge-icon.png')} style={styles.logoImage} />
           </View>
@@ -94,49 +94,51 @@ export default function LoginScreen() {
           <Text style={styles.subtitle}>공용 냉장고를 함께 관리해요</Text>
         </View>
 
-        {/* 로그인 버튼 */}
-        <View style={styles.buttons}>
-          <TouchableOpacity
-            style={styles.kakaoButton}
-            onPress={() => handleLogin('kakao')}
-            disabled={loading !== null}
-            activeOpacity={0.85}
-          >
-            {loading === 'kakao' ? (
-              <ActivityIndicator color="#191919" />
-            ) : (
-              <>
-                <KakaoIcon />
-                <Text style={styles.kakaoText}>카카오로 시작하기</Text>
-              </>
-            )}
-          </TouchableOpacity>
+        {/* 버튼 + 약관 — 하단 고정 */}
+        <View style={styles.bottom}>
+          <View style={styles.buttons}>
+            <TouchableOpacity
+              style={styles.kakaoButton}
+              onPress={() => handleLogin('kakao')}
+              disabled={loading !== null}
+              activeOpacity={0.85}
+            >
+              {loading === 'kakao' ? (
+                <ActivityIndicator color="#191919" />
+              ) : (
+                <>
+                  <KakaoIcon />
+                  <Text style={styles.kakaoText}>카카오로 시작하기</Text>
+                </>
+              )}
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={() => handleLogin('google')}
-            disabled={loading !== null}
-            activeOpacity={0.85}
-          >
-            {loading === 'google' ? (
-              <ActivityIndicator color="#444444" />
-            ) : (
-              <>
-                <GoogleIcon />
-                <Text style={styles.googleText}>구글로 시작하기</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={styles.googleButton}
+              onPress={() => handleLogin('google')}
+              disabled={loading !== null}
+              activeOpacity={0.85}
+            >
+              {loading === 'google' ? (
+                <ActivityIndicator color="#444444" />
+              ) : (
+                <>
+                  <GoogleIcon />
+                  <Text style={styles.googleText}>구글로 시작하기</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.legalRow}>
-          <TouchableOpacity onPress={() => Linking.openURL('https://www.notion.so/3300d8d7efe380b59bfce25f34226368')}>
-            <Text style={styles.legalLink}>이용약관</Text>
-          </TouchableOpacity>
-          <Text style={styles.legalSep}>·</Text>
-          <TouchableOpacity onPress={() => Linking.openURL('https://www.notion.so/3300d8d7efe380a79f3dcfc9ea0c7274')}>
-            <Text style={styles.legalLink}>개인정보처리방침</Text>
-          </TouchableOpacity>
+          <View style={styles.legalRow}>
+            <TouchableOpacity onPress={() => Linking.openURL('https://www.notion.so/3300d8d7efe380b59bfce25f34226368')}>
+              <Text style={styles.legalLink}>이용약관</Text>
+            </TouchableOpacity>
+            <Text style={styles.legalSep}>·</Text>
+            <TouchableOpacity onPress={() => Linking.openURL('https://www.notion.so/3300d8d7efe380a79f3dcfc9ea0c7274')}>
+              <Text style={styles.legalLink}>개인정보처리방침</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </SafeAreaView>
@@ -180,27 +182,31 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    paddingHorizontal: 24,
+    justifyContent: 'space-between',
+  },
+  hero: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: 48,
+  bottom: {
+    paddingBottom: 16,
+    width: '100%',
   },
   logoBox: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
+    width: 110,
+    height: 110,
+    borderRadius: 30,
     backgroundColor: '#EBF8FB',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
     overflow: 'hidden',
   },
   logoImage: {
-    width: 64,
-    height: 64,
+    width: 110,
+    height: 110,
   },
 title: {
     fontSize: 20,
@@ -215,8 +221,8 @@ title: {
   },
   buttons: {
     width: '100%',
-    maxWidth: 320,
     gap: 12,
+    marginBottom: 20,
   },
   kakaoButton: {
     flexDirection: 'row',
@@ -261,7 +267,6 @@ title: {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    marginTop: 32,
   },
   legalLink: {
     fontSize: 12,
