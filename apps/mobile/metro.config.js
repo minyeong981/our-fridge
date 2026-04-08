@@ -19,10 +19,4 @@ config.resolver.extraNodeModules = {
   'react-native': path.resolve(__dirname, 'node_modules/react-native'),
 }
 
-// Windows FallbackWatcher가 node_modules 모든 하위 디렉터리에 fs.watch 등록 → 타임아웃
-// blockList → ignorePattern → ignorePatternForWatch 경로로 watcher 제외에 사용됨
-// posixPathMatchesPattern이 경로를 / 로 변환 후 비교하므로 패턴도 / 기준으로 작성해야 함
-// 번들러는 nodeModulesPaths 기반 해석(HasteMap 아님)을 쓰므로 번들링에 영향 없음
-config.resolver.blockList = [/\/node_modules\//]
-
 module.exports = config
