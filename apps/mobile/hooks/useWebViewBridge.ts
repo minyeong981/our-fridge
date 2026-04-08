@@ -5,7 +5,6 @@ import type { WebView } from 'react-native-webview'
 import type React from 'react'
 import {
   requestPermissionAndGetToken,
-  scheduleTestNotification,
   updateNotifHandlerSettings,
   type NotifSettings,
 } from './useNotificationSetup'
@@ -56,8 +55,6 @@ export function handleWebMessage(
 
     if (msg.type === 'notif_settings') {
       updateNotifHandlerSettings(msg.data as NotifSettings)
-    } else if (msg.type === 'test_notification') {
-      scheduleTestNotification()
     } else if (msg.type === 'pick_image') {
       const source = (msg.data?.source ?? msg.source) as 'camera' | 'gallery'
       pickImage(source).then((base64) => {
