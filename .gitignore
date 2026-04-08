@@ -161,3 +161,6 @@ docs/
 
 # .gitignore
 .gitignore
+
+apps/mobile/android/
+apps/mobile/.expo/
