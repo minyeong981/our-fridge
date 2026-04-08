@@ -141,6 +141,9 @@ function AddItemContent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items', fridgeId] })
+      if (isEditMode && itemId) {
+        queryClient.invalidateQueries({ queryKey: ['item', itemId] })
+      }
       router.back()
     },
   })
