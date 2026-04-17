@@ -50,12 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const onRNSessionReady = async () => {
       await handleRNSession()
-      supabase.auth.getSession().then(({ data }) => {
-        const u = data.session?.user ?? null
-        setUser(u)
-        if (u) loadProfile(u.id)
-        else setLoading(false)
-      })
+      // setSession이 onAuthStateChange를 트리거하므로 여기서 추가 처리 불필요
     }
     window.addEventListener('rn-session-ready', onRNSessionReady)
 

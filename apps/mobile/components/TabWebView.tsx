@@ -28,17 +28,12 @@ export function TabWebView({ path, webViewRef, onBackToHome, onLogout }: TabWebV
     const { data } = await supabase.auth.getSession()
     if (!data.session) return
     const { access_token, refresh_token } = data.session
-    const targetUrl = JSON.stringify(WEB_URL + path)
     webViewRef.current?.injectJavaScript(`
       (function() {
         if (window.__RN_SESSION_INJECTED__) return;
         window.__RN_SESSION_INJECTED__ = true;
         window.__RN_SESSION__ = ${JSON.stringify({ access_token, refresh_token })};
         window.dispatchEvent(new CustomEvent('rn-session-ready'));
-        // 미들웨어가 /login으로 리다이렉트한 경우 원래 경로로 복귀
-        if (window.location.pathname === '/login') {
-          window.location.href = ${targetUrl};
-        }
       })();
       true;
     `)

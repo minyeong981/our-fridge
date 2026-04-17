@@ -29,6 +29,7 @@ export default function RootLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="login" options={{ presentation: 'fullScreenModal' }} />
+      <Stack.Screen name="auth/callback" />
     </Stack>
   )
 }

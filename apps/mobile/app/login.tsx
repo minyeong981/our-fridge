@@ -43,7 +43,12 @@ async function signInWithProvider(provider: 'google' | 'kakao'): Promise<boolean
   const refresh_token = params?.refresh_token
 
   if (!access_token || !refresh_token) {
-    // hash fragment 방식 (access_token이 # 뒤에 있을 경우)
+    // PKCE 플로우: code 파라미터로 세션 교환
+    if (params?.code) {
+      const { error: sessionError } = await supabase.auth.exchangeCodeForSession(params.code)
+      return !sessionError
+    }
+    // implicit 플로우: hash fragment에 토큰이 있는 경우
     const hash = result.url.split('#')[1] ?? ''
     const hashParams = Object.fromEntries(new URLSearchParams(hash))
     if (hashParams.access_token && hashParams.refresh_token) {
