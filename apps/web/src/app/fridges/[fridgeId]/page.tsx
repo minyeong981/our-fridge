@@ -696,8 +696,8 @@ function FridgeItemCard({
       className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 shadow-sm border border-neutral-100 cursor-pointer active:bg-neutral-50 transition-colors"
     >
       <div className="w-14 h-14 rounded-xl bg-neutral-50 flex items-center justify-center shrink-0 overflow-hidden">
-        {item.imageUrl ? (
-          <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+        {item.imageUrls[0] ? (
+          <img src={item.imageUrls[0]} alt={item.name} className="w-full h-full object-cover" />
         ) : (
           <span className="text-2xl">🧊</span>
         )}

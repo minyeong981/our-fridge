@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { ChevronLeft, MoreVertical, Snowflake } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -50,6 +50,8 @@ export default function ItemDetailPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false)
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+  const [carouselIndex, setCarouselIndex] = useState(0)
+  const touchStartX = useRef(0)
   const [processStatus, setProcessStatus] = useState<ProcessStatus | null>(null)
 
   const { data: item, isLoading } = useQuery({
@@ -132,8 +134,34 @@ export default function ItemDetailPage() {
     <div className="h-full flex flex-col relative">
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="relative w-full h-56 bg-neutral-100 shrink-0">
-          {item.imageUrl ? (
-            <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+          {item.imageUrls.length > 0 ? (
+            <>
+              <img
+                src={item.imageUrls[carouselIndex]}
+                alt={item.name}
+                className="w-full h-full object-cover"
+                onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX }}
+                onTouchEnd={(e) => {
+                  const dx = e.changedTouches[0].clientX - touchStartX.current
+                  if (Math.abs(dx) < 40) return
+                  if (dx < 0 && carouselIndex < item.imageUrls.length - 1) setCarouselIndex((i) => i + 1)
+                  if (dx > 0 && carouselIndex > 0) setCarouselIndex((i) => i - 1)
+                }}
+              />
+              {carouselIndex > 0 && (
+                <button onClick={() => setCarouselIndex((i) => i - 1)} className="absolute left-0 top-0 h-full w-1/3" aria-label="이전" />
+              )}
+              {carouselIndex < item.imageUrls.length - 1 && (
+                <button onClick={() => setCarouselIndex((i) => i + 1)} className="absolute right-0 top-0 h-full w-1/3" aria-label="다음" />
+              )}
+              {item.imageUrls.length > 1 && (
+                <div className="absolute bottom-2.5 inset-x-0 flex justify-center gap-1.5">
+                  {item.imageUrls.map((_, i) => (
+                    <div key={i} className={cn('w-1.5 h-1.5 rounded-full transition-colors', i === carouselIndex ? 'bg-white' : 'bg-white/40')} />
+                  ))}
+                </div>
+              )}
+            </>
           ) : (
             <div className="w-full h-full bg-neutral-100 flex items-center justify-center">
               <span className="text-neutral-300 text-sm font-medium">사진 없음</span>

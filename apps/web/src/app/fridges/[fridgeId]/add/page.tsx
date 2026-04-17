@@ -1,7 +1,7 @@
 'use client'
 
-import { Suspense, useState, useEffect, useRef } from 'react'
-import { Camera } from 'lucide-react'
+import { Suspense, useState, useEffect, useRef, useCallback } from 'react'
+import { MultiImagePicker } from '@/components/ui/MultiImagePicker'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
@@ -43,22 +43,23 @@ function AddItemContent() {
     enabled: !!itemId,
   })
 
+  const MAX_PHOTOS = 3
+
   const [name, setName] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
   const [storage, setStorage] = useState<StorageType>('냉장')
   const [memo, setMemo] = useState('')
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [imageUrls, setImageUrls] = useState<string[]>([])
   const [isUploadingImage, setIsUploadingImage] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const workerRef = useRef<Worker | null>(null)
-  const webpPreviewUrlRef = useRef<string | null>(null)
+  const blobPreviewUrlsRef = useRef<string[]>([])
 
   useEffect(() => {
     workerRef.current = new Worker(new URL('@/workers/imageProcessor.ts', import.meta.url))
     return () => {
       workerRef.current?.terminate()
-      if (webpPreviewUrlRef.current) URL.revokeObjectURL(webpPreviewUrlRef.current)
+      blobPreviewUrlsRef.current.forEach((u) => URL.revokeObjectURL(u))
     }
   }, [])
 
@@ -68,55 +69,85 @@ function AddItemContent() {
       setExpiresAt(prefill.expireDate ?? '')
       setStorage(prefill.storageType)
       setMemo(prefill.memo ?? '')
-      if (prefill.imageUrl) {
-        setImageUrl(prefill.imageUrl)
-        setImagePreview(prefill.imageUrl)
-      }
+      setImagePreviews(prefill.imageUrls)
+      setImageUrls(prefill.imageUrls)
     }
   }, [prefill])
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  const processImageBlob = useCallback(async (
+    blob: Blob,
+    immediatePreview?: string,
+  ): Promise<{ webpPreviewUrl: string; uploadedUrl: string } | null> => {
     const worker = workerRef.current
-    if (!file || !worker) return
-
-    // 이전 WebP blob URL 해제
-    if (webpPreviewUrlRef.current) {
-      URL.revokeObjectURL(webpPreviewUrlRef.current)
-      webpPreviewUrlRef.current = null
-    }
-
-    const previewUrl = URL.createObjectURL(file)
-    setImagePreview(previewUrl)
+    if (!worker) return null
     setIsUploadingImage(true)
-
     let bitmap: ImageBitmap | null = null
     try {
-      bitmap = await createImageBitmap(file)
-
+      bitmap = await createImageBitmap(blob)
       const result = await new Promise<ArrayBuffer>((resolve, reject) => {
         worker.onmessage = (ev) => resolve(ev.data.arrayBuffer)
         worker.onerror = reject
         worker.postMessage({ bitmap }, [bitmap as ImageBitmap])
-        bitmap = null  // worker로 ownership 이전 — 이후 close는 worker 담당
+        bitmap = null
       })
-
-      URL.revokeObjectURL(previewUrl)
-      const blob = new Blob([result], { type: 'image/webp' })
-      const webpUrl = URL.createObjectURL(blob)
-      webpPreviewUrlRef.current = webpUrl
-      setImagePreview(webpUrl)
-
-      const base64 = await blobToBase64(blob)
-      const url = await uploadItemImage(fridgeId, base64, 'webp')
-      setImageUrl(url)
+      if (immediatePreview) URL.revokeObjectURL(immediatePreview)
+      const webpBlob = new Blob([result], { type: 'image/webp' })
+      const webpPreviewUrl = URL.createObjectURL(webpBlob)
+      blobPreviewUrlsRef.current.push(webpPreviewUrl)
+      const base64 = await blobToBase64(webpBlob)
+      const uploadedUrl = await uploadItemImage(fridgeId, base64, 'webp')
+      return { webpPreviewUrl, uploadedUrl }
     } catch {
-      bitmap?.close()           // postMessage 전에 실패한 경우만 도달
-      URL.revokeObjectURL(previewUrl)
-      setImagePreview(null)
+      bitmap?.close()
+      if (immediatePreview) URL.revokeObjectURL(immediatePreview)
+      return null
     } finally {
       setIsUploadingImage(false)
     }
+  }, [fridgeId])
+
+  const addImage = useCallback(async (blob: Blob, immediatePreview?: string) => {
+    setImagePreviews((prev) => {
+      if (prev.length >= MAX_PHOTOS) return prev
+      return [...prev, immediatePreview ?? '']
+    })
+    const idx = imagePreviews.length
+    const result = await processImageBlob(blob, immediatePreview)
+    if (result) {
+      setImagePreviews((prev) => { const next = [...prev]; next[idx] = result.webpPreviewUrl; return next })
+      setImageUrls((prev) => [...prev, result.uploadedUrl])
+    } else {
+      setImagePreviews((prev) => prev.filter((_, i) => i !== idx))
+    }
+  }, [imagePreviews.length, processImageBlob])
+
+  const removeImage = (index: number) => {
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index))
+    setImageUrls((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleFileChange = async (file: File) => {
+    const previewUrl = URL.createObjectURL(file)
+    await addImage(file, previewUrl)
+  }
+
+  useEffect(() => {
+    const handleRNMessage = (e: MessageEvent) => {
+      try {
+        const msg = JSON.parse(e.data)
+        if (msg.type === 'image_picked' && msg.base64) {
+          const bytes = Uint8Array.from(atob(msg.base64), (c) => c.charCodeAt(0))
+          const blob = new Blob([bytes], { type: 'image/jpeg' })
+          addImage(blob, `data:image/jpeg;base64,${msg.base64}`)
+        }
+      } catch {}
+    }
+    window.addEventListener('message', handleRNMessage)
+    return () => window.removeEventListener('message', handleRNMessage)
+  }, [addImage])
+
+  const handleRNPick = (source: 'camera' | 'gallery') => {
+    ;(window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'pick_image', data: { source } }))
   }
 
   const { mutate: save, isPending } = useMutation({
@@ -127,7 +158,7 @@ function AddItemContent() {
           storageType: storage,
           expireDate: expiresAt || null,
           memo: memo.trim() || null,
-          imageUrl: imageUrl ?? undefined,
+          imageUrls,
         })
       }
       return createItem({
@@ -136,7 +167,7 @@ function AddItemContent() {
         storageType: storage,
         expireDate: expiresAt || null,
         memo: memo.trim() || null,
-        imageUrl: imageUrl ?? undefined,
+        imageUrls,
       })
     },
     onSuccess: () => {
@@ -148,7 +179,8 @@ function AddItemContent() {
     },
   })
 
-  const canSubmit = name.trim() && (isEditMode || !!imageUrl) && !isPending && !isUploadingImage
+  const allUploaded = imagePreviews.length === imageUrls.length
+  const canSubmit = name.trim() && (isEditMode || imageUrls.length > 0) && allUploaded && !isPending && !isUploadingImage
 
   const handleSubmit = () => {
     if (!canSubmit) return
@@ -160,40 +192,16 @@ function AddItemContent() {
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="max-w-lg mx-auto w-full px-4 py-6 flex flex-col gap-5">
           {/* 사진 등록 */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-neutral-700">
-              사진
-              {!isEditMode && <span className="ml-1 text-xs font-normal text-red-400">*</span>}
-            </label>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className={cn(
-                'w-32 h-32 rounded-xl overflow-hidden flex flex-col items-center justify-center gap-1.5 transition-colors',
-                imagePreview
-                  ? 'border-0'
-                  : 'bg-white border border-dashed border-neutral-300 hover:bg-neutral-50',
-              )}
-            >
-              {imagePreview ? (
-                <img src={imagePreview} alt="미리보기" className="w-full h-full object-cover" />
-              ) : (
-                <>
-                  <Camera size={22} className={cn('text-neutral-400', isUploadingImage && 'animate-pulse')} />
-                  <span className="text-xs text-neutral-400 font-medium">
-                    {isUploadingImage ? '업로드 중...' : '사진 추가'}
-                  </span>
-                </>
-              )}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageChange}
-            />
-          </div>
+          <MultiImagePicker
+            label="사진"
+            required={!isEditMode}
+            photos={imagePreviews}
+            max={MAX_PHOTOS}
+            isUploading={isUploadingImage}
+            onRemove={removeImage}
+            onFileChange={handleFileChange}
+            onRNPick={handleRNPick}
+          />
 
           <FormField
             label="이름"

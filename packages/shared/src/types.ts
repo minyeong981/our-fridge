@@ -50,7 +50,7 @@ export type Item = {
   registeredBy: string
   expireDate: string | null
   memo: string | null
-  imageUrl: string | null
+  imageUrls: string[]
   status: ItemStatus
   createdAt: string
   updatedAt: string
@@ -60,11 +60,11 @@ export type CreateItemInput = Pick<Item, 'fridgeId' | 'name'> & {
   storageType?: StorageType
   expireDate?: string | null
   memo?: string | null
-  imageUrl?: string | null
+  imageUrls?: string[]
 }
 
 export type UpdateItemInput = Partial<
-  Pick<Item, 'name' | 'storageType' | 'expireDate' | 'memo' | 'imageUrl' | 'status'>
+  Pick<Item, 'name' | 'storageType' | 'expireDate' | 'memo' | 'imageUrls' | 'status'>
 >
 
 // ─── ItemLog ──────────────────────────────────────────────────────────────────

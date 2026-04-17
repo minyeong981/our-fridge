@@ -1,12 +1,13 @@
 'use client'
 
-import { Suspense, useState, useEffect, useRef } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Camera, ImageIcon, X, ChevronLeft } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { createPost, updatePost, getPost, uploadPostImage } from '@our-fridge/api'
 import type { PostCategory } from '@our-fridge/shared'
+import { MultiImagePicker } from '@/components/ui/MultiImagePicker'
 
 function isInRN(): boolean {
   return typeof window !== 'undefined' && !!(window as any).ReactNativeWebView
@@ -44,8 +45,6 @@ function CommunityWriteContent() {
   const [photos, setPhotos] = useState<string[]>([]) // 미리보기용 data URL
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]) // 업로드된 URL
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
-  const [showPickerSheet, setShowPickerSheet] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (prefill) {
@@ -84,20 +83,7 @@ function CommunityWriteContent() {
     }
   }
 
-  const openPicker = () => {
-    if (photos.length >= MAX_PHOTOS) return
-    if (isInRN()) {
-      setShowPickerSheet(true)
-    } else {
-      fileInputRef.current?.click()
-    }
-  }
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    e.target.value = ''
-
+  const handleFileChange = async (file: File) => {
     const dataUrl = await new Promise<string>((resolve) => {
       const reader = new FileReader()
       reader.onload = (ev) => resolve(ev.target?.result as string)
@@ -105,6 +91,10 @@ function CommunityWriteContent() {
     })
     const base64 = dataUrl.split(',')[1]
     await handleUploadBase64(dataUrl, base64)
+  }
+
+  const handleRNPick = (source: 'camera' | 'gallery') => {
+    postToRN({ type: 'pick_image', source })
   }
 
   const removePhoto = (index: number) => {
@@ -211,40 +201,14 @@ function CommunityWriteContent() {
           />
 
           {/* 사진 추가 */}
-          <div className="flex flex-col gap-2.5">
-            <p className="text-xs font-semibold text-neutral-500">
-              사진{' '}
-              <span className="text-neutral-400 font-normal">
-                {photos.length} / {MAX_PHOTOS}
-              </span>
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              {/* 추가 버튼 — 항상 맨 앞 */}
-              {photos.length < MAX_PHOTOS && (
-                <button
-                  onClick={openPicker}
-                  disabled={isUploadingPhoto}
-                  className="w-24 h-24 rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 flex flex-col items-center justify-center gap-1.5 text-neutral-400 shrink-0 disabled:opacity-50"
-                >
-                  <Camera size={18} className={isUploadingPhoto ? 'animate-pulse' : ''} />
-                  <span className="text-[10px] font-semibold tracking-wide">
-                    {isUploadingPhoto ? '업로드 중...' : '사진 추가'}
-                  </span>
-                </button>
-              )}
-              {photos.map((src, i) => (
-                <div key={i} className="relative w-24 h-24 shrink-0">
-                  <img src={src} alt="" className="w-full h-full rounded-2xl object-cover" />
-                  <button
-                    onClick={() => removePhoto(i)}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-neutral-800 rounded-full flex items-center justify-center"
-                  >
-                    <X size={11} className="text-white" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
+          <MultiImagePicker
+            photos={photos}
+            max={MAX_PHOTOS}
+            isUploading={isUploadingPhoto}
+            onRemove={removePhoto}
+            onFileChange={handleFileChange}
+            onRNPick={handleRNPick}
+          />
 
           {/* 익명 — 이의 제기/신고 전용 */}
           {isReport && (
@@ -275,53 +239,6 @@ function CommunityWriteContent() {
           )}
         </div>
       </div>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileChange}
-      />
-
-      {/* RN 이미지 소스 선택 시트 */}
-      {showPickerSheet && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/40 z-50"
-            onClick={() => setShowPickerSheet(false)}
-          />
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 pb-8">
-            <div className="flex justify-center pt-3 pb-4">
-              <div className="w-10 h-1 bg-neutral-200 rounded-full" />
-            </div>
-            <button
-              onClick={() => {
-                setShowPickerSheet(false)
-                postToRN({ type: 'pick_image', source: 'camera' })
-              }}
-              className="w-full flex items-center gap-4 px-6 py-4 active:bg-neutral-50 transition-colors"
-            >
-              <div className="w-10 h-10 rounded-2xl bg-neutral-100 flex items-center justify-center">
-                <Camera size={18} className="text-neutral-600" />
-              </div>
-              <span className="text-sm font-semibold text-neutral-800">카메라로 찍기</span>
-            </button>
-            <button
-              onClick={() => {
-                setShowPickerSheet(false)
-                postToRN({ type: 'pick_image', source: 'gallery' })
-              }}
-              className="w-full flex items-center gap-4 px-6 py-4 active:bg-neutral-50 transition-colors"
-            >
-              <div className="w-10 h-10 rounded-2xl bg-neutral-100 flex items-center justify-center">
-                <ImageIcon size={18} className="text-neutral-600" />
-              </div>
-              <span className="text-sm font-semibold text-neutral-800">갤러리에서 선택</span>
-            </button>
-          </div>
-        </>
-      )}
     </div>
   )
 }

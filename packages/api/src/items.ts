@@ -10,7 +10,7 @@ function mapItem(raw: any): Item {
     registeredBy: raw.registered_by,
     expireDate: raw.expire_date ?? null,
     memo: raw.memo ?? null,
-    imageUrl: raw.image_url ?? null,
+    imageUrls: raw.image_urls ?? [],
     status: raw.status,
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
@@ -54,7 +54,7 @@ export async function createItem(input: CreateItemInput): Promise<Item> {
       registered_by: userId,
       expire_date: input.expireDate ?? null,
       memo: input.memo ?? null,
-      image_url: input.imageUrl ?? null,
+      image_urls: input.imageUrls ?? [],
     })
     .select()
     .single()
@@ -69,7 +69,7 @@ export async function updateItem(itemId: string, input: UpdateItemInput): Promis
   if (input.storageType !== undefined) patch.storage_type = input.storageType
   if (input.expireDate !== undefined) patch.expire_date = input.expireDate
   if (input.memo !== undefined) patch.memo = input.memo
-  if (input.imageUrl !== undefined) patch.image_url = input.imageUrl
+  if (input.imageUrls !== undefined) patch.image_urls = input.imageUrls
   if (input.status !== undefined) patch.status = input.status
 
   const { data, error } = await supabase
