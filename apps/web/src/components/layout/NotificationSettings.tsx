@@ -18,12 +18,12 @@ import type { NotifSettings } from '@/contexts/NotificationContext'
 import { cn } from '@/lib/utils'
 
 interface ToggleRowProps {
-  icon: React.ReactNode
-  label: string
-  description?: string
-  checked: boolean
-  onChange: (v: boolean) => void
-  disabled?: boolean
+  readonly icon: React.ReactNode
+  readonly label: string
+  readonly description?: string
+  readonly checked: boolean
+  readonly onChange: (v: boolean) => void
+  readonly disabled?: boolean
 }
 
 function ToggleRow({ icon, label, description, checked, onChange, disabled }: ToggleRowProps) {
@@ -62,7 +62,7 @@ function ToggleRow({ icon, label, description, checked, onChange, disabled }: To
   )
 }
 
-function SectionLabel({ title }: { title: string }) {
+function SectionLabel({ title }: { readonly title: string }) {
   return (
     <p className="px-5 pt-5 pb-2 text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
       {title}
@@ -70,11 +70,6 @@ function SectionLabel({ title }: { title: string }) {
   )
 }
 
-function postToRN(data: object) {
-  if (typeof window !== 'undefined' && (window as any).ReactNativeWebView) {
-    ;(window as any).ReactNativeWebView.postMessage(JSON.stringify(data))
-  }
-}
 
 export function NotificationSettings() {
   const { isSettingsOpen, closeSettings, settings, updateSettings } = useNotification()
@@ -222,18 +217,6 @@ export function NotificationSettings() {
             onChange={() => toggle('communityReport')}
             disabled={off}
           />
-        </div>
-
-        <div className="mx-4 mt-6 mb-2">
-          <button
-            onClick={() => postToRN({ type: 'test_notification' })}
-            className="w-full py-3.5 rounded-2xl border border-neutral-200 text-sm font-semibold text-neutral-500 active:bg-neutral-50 transition-colors"
-          >
-            테스트 알림 보내기
-          </button>
-          <p className="text-[11px] text-neutral-400 text-center mt-2">
-            3초 후 테스트 알림이 발송돼요
-          </p>
         </div>
 
         <div className="h-8" />

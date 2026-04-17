@@ -3,9 +3,11 @@
 import { useEffect, type ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useNotificationStore } from '@/stores/useNotificationStore'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { setUser, setProfile, setLoading, setTermsAgreed } = useAuthStore()
+  const loadSettingsForUser = useNotificationStore((s) => s.loadSettingsForUser)
 
   useEffect(() => {
     const supabase = createClient()
@@ -60,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const u = session?.user ?? null
       setUser(u)
+      loadSettingsForUser(u?.id ?? null)
       if (u) loadProfile(u.id)
       else { setProfile(null); setLoading(false) }
     })
@@ -68,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe()
       window.removeEventListener('rn-session-ready', onRNSessionReady)
     }
-  }, [setUser, setProfile, setLoading])
+  }, [setUser, setProfile, setLoading, setTermsAgreed, loadSettingsForUser])
 
   return <>{children}</>
 }

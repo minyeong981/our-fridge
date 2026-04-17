@@ -32,11 +32,10 @@ const DEFAULT_SETTINGS: NotifSettings = {
   fridgeInvite: true,
   communityMyPostComment: true,
   communityMyComment: true,
-  communityLikedPost: false,
+  communityLikedPost: true,
   communityShare: true,
   communityReport: true,
 }
-
 
 export interface NotificationState {
   notifications: Notification[]
@@ -45,8 +44,9 @@ export interface NotificationState {
   isSettingsOpen: boolean
   isPushPermissionSheetOpen: boolean
   settings: NotifSettings
+  currentUserId: string | null
+  settingsByUser: Record<string, NotifSettings>
 
-  // actions
   openPanel: () => void
   closePanel: () => void
   openSettings: () => void
@@ -56,6 +56,7 @@ export interface NotificationState {
   deleteOne: (id: string) => void
   deleteAll: () => void
   updateSettings: (patch: Partial<NotifSettings>) => void
+  loadSettingsForUser: (userId: string | null) => void
   addNotification: (n: Notification) => void
   allowPushPermission: () => void
   dismissPushPermission: () => void
@@ -70,6 +71,14 @@ function setNotifications(notifications: Notification[]) {
   return { notifications, unreadCount: countUnread(notifications) }
 }
 
+function postSettingsToRN(settings: NotifSettings) {
+  if (typeof window !== 'undefined' && (window as any).ReactNativeWebView) {
+    ;(window as any).ReactNativeWebView.postMessage(
+      JSON.stringify({ type: 'notif_settings', data: settings }),
+    )
+  }
+}
+
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
   unreadCount: 0,
@@ -77,6 +86,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   isSettingsOpen: false,
   isPushPermissionSheetOpen: false,
   settings: DEFAULT_SETTINGS,
+  currentUserId: null,
+  settingsByUser: {},
 
   openPanel: () => set({ isPanelOpen: true }),
   closePanel: () => set({ isPanelOpen: false, isSettingsOpen: false }),
@@ -94,14 +105,21 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     set((state) => setNotifications(state.notifications.filter((n) => n.id !== id))),
   deleteAll: () => set({ notifications: [], unreadCount: 0 }),
 
+  loadSettingsForUser: (userId) => {
+    const { settingsByUser } = get()
+    const settings = userId ? (settingsByUser[userId] ?? DEFAULT_SETTINGS) : DEFAULT_SETTINGS
+    set({ currentUserId: userId, settings })
+    postSettingsToRN(settings)
+  },
+
   updateSettings: (patch) => {
     const next = { ...get().settings, ...patch }
-    set({ settings: next })
-    if (typeof window !== 'undefined' && (window as any).ReactNativeWebView) {
-      ;(window as any).ReactNativeWebView.postMessage(
-        JSON.stringify({ type: 'notif_settings', data: next }),
-      )
-    }
+    const { currentUserId, settingsByUser } = get()
+    set({
+      settings: next,
+      settingsByUser: currentUserId ? { ...settingsByUser, [currentUserId]: next } : settingsByUser,
+    })
+    postSettingsToRN(next)
   },
 
   addNotification: (n) => set((state) => setNotifications([n, ...state.notifications])),
