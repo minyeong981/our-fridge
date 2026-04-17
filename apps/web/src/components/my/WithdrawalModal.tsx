@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { X, ChevronRight, Check, AlertTriangle, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -20,7 +19,6 @@ interface Props {
 }
 
 export function WithdrawalModal({ isOpen, onClose }: Props) {
-  const router = useRouter()
   const [step, setStep] = useState<Step>('loading')
   const [fridgesNeedingDelegate, setFridgesNeedingDelegate] = useState<FridgeNeedingDelegation[]>([])
   // fridgeId → 선택된 새 관리자 userId
@@ -71,14 +69,12 @@ export function WithdrawalModal({ isOpen, onClose }: Props) {
     setError(null)
     try {
       await deleteAccount()
-      // 로컬 세션 정리
       const supabase = createClient()
       await supabase.auth.signOut()
-      // RN WebView에 로그아웃 알림
       if (typeof window !== 'undefined' && (window as any).ReactNativeWebView) {
+        // RN이 로그인 화면으로 이동 처리
         ;(window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'logout' }))
       }
-      router.replace('/login')
     } catch (e: any) {
       setError(e?.message ?? '탈퇴 처리 중 오류가 발생했어요')
       setIsDeleting(false)

@@ -16,6 +16,5 @@ export async function GET(request: Request) {
     }
   }
 
-  // 실패 시 로그인 페이지로 (에러 메시지 포함)
   return NextResponse.redirect(`${siteUrl}/login?error=auth_failed`)
 }

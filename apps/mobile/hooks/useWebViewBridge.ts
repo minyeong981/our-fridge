@@ -1,4 +1,4 @@
-import { Appearance } from 'react-native'
+import { Appearance, Alert } from 'react-native'
 import * as Linking from 'expo-linking'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { WebView } from 'react-native-webview'
@@ -66,6 +66,9 @@ export function handleWebMessage(
         if (!token) return
         injectMessage(webViewRef, { type: 'push_token', token })
       })
+    } else if (msg.type === 'auth_failed') {
+      Alert.alert('로그인 실패', '로그인 중 오류가 발생했어요. 다시 시도해 주세요.')
+      onLogout?.()
     } else if (msg.type === 'logout') {
       import('@/lib/supabase').then(({ supabase }) => {
         supabase.auth.signOut().then(() => onLogout?.())
