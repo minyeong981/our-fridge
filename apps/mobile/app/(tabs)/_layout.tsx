@@ -66,10 +66,10 @@ export default function TabLayout() {
 
   useEffect(() => {
     Linking.getInitialURL().then((url) => {
-      if (url) navigateToPath(router, toWebPath(url))
+      if (url && !url.includes('auth/callback')) navigateToPath(router, toWebPath(url))
     })
     const sub = Linking.addEventListener('url', ({ url }) => {
-      navigateToPath(router, toWebPath(url))
+      if (!url.includes('auth/callback')) navigateToPath(router, toWebPath(url))
     })
     return () => sub.remove()
   }, [router])
