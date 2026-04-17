@@ -6,7 +6,15 @@ import { cn } from '@/lib/utils'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 
-export function CalendarPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+export function CalendarPicker({
+  value,
+  onChange,
+  minDate,
+}: {
+  value: string
+  onChange: (v: string) => void
+  minDate?: Date
+}) {
   const [isOpen, setIsOpen] = useState(false)
   const [viewDate, setViewDate] = useState(() =>
     value ? new Date(value + 'T00:00:00') : new Date(),
@@ -32,6 +40,13 @@ export function CalendarPicker({ value, onChange }: { value: string; onChange: (
     today.getFullYear() === year && today.getMonth() === month && today.getDate() === day
 
   const isSelected = (day: number) => isInViewMonth && selectedDate!.getDate() === day
+
+  const isBeforeMin = (day: number) => {
+    if (!minDate) return false
+    const d = new Date(year, month, day)
+    const min = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate())
+    return d < min
+  }
 
   const selectDay = (day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
@@ -103,18 +118,21 @@ export function CalendarPicker({ value, onChange }: { value: string; onChange: (
               <div key={`${year}-${month}-${i}`} className="flex items-center justify-center py-0.5">
                 {day !== null ? (
                   <button
-                    onClick={() => selectDay(day)}
+                    onClick={() => !isBeforeMin(day) && selectDay(day)}
+                    disabled={isBeforeMin(day)}
                     className={cn(
                       'w-9 h-9 rounded-full text-sm font-medium transition-colors',
-                      isSelected(day)
-                        ? 'bg-primary text-white font-bold'
-                        : isToday(day)
-                          ? 'ring-2 ring-primary text-primary font-bold'
-                          : i % 7 === 0
-                            ? 'text-red-400 hover:bg-red-50'
-                            : i % 7 === 6
-                              ? 'text-blue-400 hover:bg-blue-50'
-                              : 'text-neutral-700 hover:bg-neutral-100',
+                      isBeforeMin(day)
+                        ? 'text-neutral-300 cursor-not-allowed'
+                        : isSelected(day)
+                          ? 'bg-primary text-white font-bold'
+                          : isToday(day)
+                            ? 'ring-2 ring-primary text-primary font-bold'
+                            : i % 7 === 0
+                              ? 'text-red-400 hover:bg-red-50'
+                              : i % 7 === 6
+                                ? 'text-blue-400 hover:bg-blue-50'
+                                : 'text-neutral-700 hover:bg-neutral-100',
                     )}
                   >
                     {day}

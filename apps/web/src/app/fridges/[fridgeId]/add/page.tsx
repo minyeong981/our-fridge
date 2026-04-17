@@ -209,7 +209,7 @@ function AddItemContent() {
               소비기한 / 유통기한{' '}
               <span className="text-xs font-normal text-neutral-400">(선택)</span>
             </label>
-            <CalendarPicker value={expiresAt} onChange={setExpiresAt} />
+            <CalendarPicker value={expiresAt} onChange={setExpiresAt} minDate={new Date()} />
           </div>
 
           {/* 보관 방식 */}
