@@ -10,8 +10,7 @@ import { useNotificationSetup } from '@/hooks/useNotificationSetup'
 
 function toWebPath(url: string): string {
   if (url.startsWith('http')) {
-    const { pathname, search } = new URL(url)
-    return pathname + search
+    return url.replace(/^https?:\/\/[^/]+/, '') || '/'
   }
   const parsed = Linking.parse(url)
   const parts = [parsed.hostname, parsed.path].filter(Boolean)
@@ -24,15 +23,27 @@ function pathToTab(path: string): 'home' | 'community' | 'my' {
   return 'home'
 }
 
+const TAB_ROUTES: Record<'home' | 'community' | 'my', string> = {
+  home: '/(tabs)/home',
+  community: '/(tabs)/community',
+  my: '/(tabs)/my',
+}
+
 function navigateToPath(router: ReturnType<typeof useRouter>, path: string) {
   const tab = pathToTab(path)
-  const tabRoute = tab === 'home' ? '/(tabs)/home' : tab === 'community' ? '/(tabs)/community' : '/(tabs)/my'
-  router.navigate(tabRoute as any)
+  router.navigate(TAB_ROUTES[tab] as any)
   setActiveTab(tab)
-  // 탭 전환 후 URL 주입 (짧은 딜레이로 WebView가 준비되길 기다림)
-  setTimeout(() => {
-    navigateWebView(tab, path)
-  }, 100)
+  setTimeout(() => { navigateWebView(tab, path) }, 100)
+}
+
+function HomeIcon({ color, size }: { color: string; size: number }) {
+  return <MaterialCommunityIcons name="fridge-outline" size={size} color={color} />
+}
+function CommunityIcon({ color, size }: { color: string; size: number }) {
+  return <Ionicons name="people-outline" size={size} color={color} />
+}
+function MyIcon({ color, size }: { color: string; size: number }) {
+  return <Ionicons name="person-outline" size={size} color={color} />
 }
 
 export default function TabLayout() {
@@ -40,7 +51,6 @@ export default function TabLayout() {
   const colorScheme = useColorScheme()
   const isDark = colorScheme === 'dark'
 
-  // 저장된 테마 복원
   useEffect(() => {
     AsyncStorage.getItem('app_theme').then((saved) => {
       if (saved === 'dark') Appearance.setColorScheme('dark')
@@ -49,13 +59,11 @@ export default function TabLayout() {
     })
   }, [])
 
-  // 알림 채널 설정 + 토큰 전송
   useNotificationSetup({
     webViewRef: homeWebViewRef,
     onNavigate: (path) => navigateToPath(router, path),
   })
 
-  // 딥링크
   useEffect(() => {
     Linking.getInitialURL().then((url) => {
       if (url) navigateToPath(router, toWebPath(url))
@@ -66,7 +74,6 @@ export default function TabLayout() {
     return () => sub.remove()
   }, [router])
 
-  // 알림 탭 → 탭 이동 + URL 주입
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
       const url = response.notification.request.content.data?.url as string | undefined
@@ -75,7 +82,6 @@ export default function TabLayout() {
     return () => sub.remove()
   }, [router])
 
-  // 포그라운드 알림 수신 → 웹 알림 목록에 추가
   useEffect(() => {
     const sub = Notifications.addNotificationReceivedListener((notification) => {
       const { title, body, data } = notification.request.content
@@ -117,7 +123,6 @@ export default function TabLayout() {
           backgroundColor: isDark ? '#1C1C1E' : '#ffffff',
           borderTopColor: isDark ? 'rgba(255,255,255,0.07)' : '#F3F4F6',
           borderTopWidth: 1,
-          height: 60,
           paddingBottom: 8,
         },
         tabBarLabelStyle: {
@@ -129,26 +134,17 @@ export default function TabLayout() {
     >
       <Tabs.Screen
         name="home"
-        options={{
-          title: '홈',
-          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="fridge-outline" size={size} color={color} />,
-        }}
+        options={{ title: '홈', tabBarIcon: HomeIcon }}
         listeners={{ focus: () => setActiveTab('home'), blur: () => dispatchClosePanel(homeWebViewRef) }}
       />
       <Tabs.Screen
         name="community"
-        options={{
-          title: '커뮤니티',
-          tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" size={size} color={color} />,
-        }}
+        options={{ title: '커뮤니티', tabBarIcon: CommunityIcon }}
         listeners={{ focus: () => setActiveTab('community'), blur: () => dispatchClosePanel(communityWebViewRef) }}
       />
       <Tabs.Screen
         name="my"
-        options={{
-          title: '마이',
-          tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
-        }}
+        options={{ title: '마이', tabBarIcon: MyIcon }}
         listeners={{ focus: () => setActiveTab('my'), blur: () => dispatchClosePanel(myWebViewRef) }}
       />
     </Tabs>

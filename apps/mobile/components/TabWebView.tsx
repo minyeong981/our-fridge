@@ -13,10 +13,10 @@ const USER_AGENT =
   'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36 OurFridgeApp/1.0'
 
 interface TabWebViewProps {
-  path: string
-  webViewRef: React.RefObject<WebView | null>
-  onBackToHome?: () => void
-  onLogout?: () => void
+  readonly path: string
+  readonly webViewRef: React.RefObject<WebView | null>
+  readonly onBackToHome?: () => void
+  readonly onLogout?: () => void
 }
 
 export function TabWebView({ path, webViewRef, onBackToHome, onLogout }: TabWebViewProps) {
@@ -73,7 +73,7 @@ export function TabWebView({ path, webViewRef, onBackToHome, onLogout }: TabWebV
   const bg = isDark ? '#1C1C1E' : '#ffffff'
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: bg }]} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: bg }]} edges={['top', 'bottom']}>
       <WebView
         ref={webViewRef}
         source={{ uri: `${WEB_URL}${path}` }}
