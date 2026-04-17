@@ -11,7 +11,7 @@ import { CalendarPicker } from '@/components/ui/CalendarPicker'
 import { getItem, createItem, updateItem, uploadItemImage } from '@our-fridge/api'
 import type { StorageType } from '@our-fridge/shared'
 
-const MAX_NAME_LENGTH = 10
+const MAX_NAME_LENGTH = 20
 const MAX_MEMO_LENGTH = 100
 
 function blobToBase64(blob: Blob): Promise<string> {

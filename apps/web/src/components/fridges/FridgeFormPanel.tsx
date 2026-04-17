@@ -12,8 +12,8 @@ import { createFridge, updateFridge, addMember } from '@our-fridge/api'
 
 const EMOJI_OPTIONS = ['🧊', '🏠', '🏢', '🥬', '🍊', '🌿', '⭐', '🏖️', '🍕', '❤️', '🍱']
 
-const MAX_NAME_LENGTH = 10
-const MAX_LOCATION_LENGTH = 10
+const MAX_NAME_LENGTH = 20
+const MAX_LOCATION_LENGTH = 20
 const MAX_MEMO_LENGTH = 30
 const MAX_RULES_LENGTH = 200
 const MEMO_ROWS = 2
@@ -28,12 +28,12 @@ interface FridgeFormData {
 }
 
 interface FridgeFormPanelProps {
-  isOpen: boolean
-  onClose: () => void
-  onSuccess?: () => void
-  initialData?: FridgeFormData
-  fridgeId?: string
-  onDelete?: () => void
+  readonly isOpen: boolean
+  readonly onClose: () => void
+  readonly onSuccess?: () => void
+  readonly initialData?: FridgeFormData
+  readonly fridgeId?: string
+  readonly onDelete?: () => void
 }
 
 export function FridgeFormPanel({ isOpen, onClose, onSuccess, initialData, fridgeId, onDelete }: FridgeFormPanelProps) {
@@ -78,6 +78,8 @@ export function FridgeFormPanel({ isOpen, onClose, onSuccess, initialData, fridg
 
   if (!isOpen) return null
 
+  const saveLabel = isPending ? '저장 중...' : isEditMode ? '저장' : '추가'
+
   const handleSave = () => {
     if (!name.trim() || isPending) return
     save()
@@ -101,7 +103,7 @@ export function FridgeFormPanel({ isOpen, onClose, onSuccess, initialData, fridg
           disabled={!name.trim() || isPending}
           className="text-sm font-bold text-primary disabled:text-neutral-300 transition-colors"
         >
-          {isPending ? '저장 중...' : isEditMode ? '저장' : '추가'}
+          {saveLabel}
         </button>
       </div>
 
@@ -110,7 +112,7 @@ export function FridgeFormPanel({ isOpen, onClose, onSuccess, initialData, fridg
         <div className="mx-4 mt-4 bg-white rounded-2xl overflow-hidden shadow-sm px-5 py-5 flex flex-col gap-4">
           {/* 아이콘 */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-neutral-700">냉장고 아이콘</label>
+            <p className="text-sm font-semibold text-neutral-700">냉장고 아이콘</p>
             <div className="grid grid-cols-6 gap-2">
               {/* 선택 안 함 */}
               <button
