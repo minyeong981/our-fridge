@@ -15,6 +15,7 @@ import {
   FileEdit,
   User,
   MessageSquare,
+  Refrigerator,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
@@ -56,7 +57,15 @@ export default function MyPage() {
       <p className="px-5 pt-5 pb-1.5 text-[11px] font-bold text-neutral-400 tracking-widest">
         내 활동
       </p>
-      <div className="bg-white">
+      <div className="bg-white divide-y divide-neutral-100">
+        <button
+          onClick={() => router.push('/my/items')}
+          className="w-full flex items-center gap-3 px-5 py-4"
+        >
+          <Refrigerator size={16} className="text-neutral-400 shrink-0" />
+          <span className="flex-1 text-sm font-semibold text-neutral-800 text-left">내 음식</span>
+          <ChevronRight size={14} className="text-neutral-300" />
+        </button>
         <button
           onClick={() => router.push('/my/posts')}
           className="w-full flex items-center gap-3 px-5 py-4"

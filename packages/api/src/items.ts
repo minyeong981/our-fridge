@@ -103,3 +103,28 @@ export async function deleteItem(itemId: string): Promise<void> {
   const { error } = await supabase.from('items').delete().eq('id', itemId)
   if (error) throw error
 }
+
+export type ItemWithFridgeInfo = Item & {
+  fridgeName: string
+  spaceName: string
+}
+
+export async function getMyItems(): Promise<ItemWithFridgeInfo[]> {
+  const { data: userData } = await supabase.auth.getUser()
+  const userId = userData?.user?.id
+  if (!userId) return []
+
+  const { data, error } = await supabase
+    .from('items')
+    .select('*, fridges(name, spaces(name))')
+    .eq('registered_by', userId)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return (data ?? []).map((raw) => ({
+    ...mapItem(raw),
+    fridgeName: raw.fridges?.name ?? '',
+    spaceName: raw.fridges?.spaces?.name ?? '',
+  }))
+}

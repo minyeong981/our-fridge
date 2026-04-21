@@ -703,19 +703,7 @@ function FridgeItemCard({
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <p className="font-bold text-neutral-800 text-sm truncate">{item.name}</p>
-          {isExpired && (
-            <span className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-500">
-              기한 초과
-            </span>
-          )}
-          {!isExpired && isExpiringSoon && (
-            <span className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600">
-              만료 임박
-            </span>
-          )}
-        </div>
+        <p className="font-bold text-neutral-800 text-sm truncate mb-0.5">{item.name}</p>
         {expireDate ? (
           <p className={cn(
             'text-xs font-medium',
@@ -733,6 +721,16 @@ function FridgeItemCard({
           <p className="text-[11px] text-neutral-300 mt-0.5">{registeredByName}님이 등록함</p>
         )}
       </div>
+      {isExpired && (
+        <span className="shrink-0 self-center text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-500">
+          기한 초과
+        </span>
+      )}
+      {!isExpired && isExpiringSoon && (
+        <span className="shrink-0 self-center text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600">
+          만료 임박
+        </span>
+      )}
     </div>
   )
 }
