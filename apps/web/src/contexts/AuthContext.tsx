@@ -41,8 +41,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.session) {
         setUser(data.session.user)
         loadProfile(data.session.user.id)
+      } else if (typeof window !== 'undefined' && (window as any).__RN_SESSION__?.access_token) {
+        // injectedJavaScriptBeforeContentLoaded로 세션이 선주입된 경우 즉시 처리
+        await handleRNSession()
       } else if (typeof window !== 'undefined' && (window as any).ReactNativeWebView) {
-        // RN WebView — rn-session-ready 이벤트까지 loading 유지
+        // 선주입 없이 WebView 환경 — rn-session-ready 이벤트까지 loading 유지
       } else {
         setLoading(false)
       }

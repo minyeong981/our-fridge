@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useState, useEffect } from 'react'
 import type React from 'react'
 import { BackHandler, StyleSheet, View, ActivityIndicator, useColorScheme } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -22,8 +22,25 @@ interface TabWebViewProps {
 export function TabWebView({ path, webViewRef, onBackToHome, onLogout }: TabWebViewProps) {
   const canGoBackRef = useRef(false)
   const isDark = useColorScheme() === 'dark'
+  const bg = isDark ? '#1C1C1E' : '#ffffff'
 
-  // 세션 주입 — WebView 로드 완료 시
+  // null = 아직 세션 조회 전, string = 준비 완료 (빈 문자열이면 세션 없음)
+  const [preloadScript, setPreloadScript] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        const { access_token, refresh_token } = data.session
+        setPreloadScript(
+          `window.__RN_SESSION__=${JSON.stringify({ access_token, refresh_token })};window.__RN_SESSION_INJECTED__=true;true;`,
+        )
+      } else {
+        setPreloadScript('')
+      }
+    })
+  }, [])
+
+  // onLoadEnd: preloadScript가 없는 경우의 폴백, 또는 토큰 갱신 후 재주입
   const handleLoadEnd = useCallback(async () => {
     const { data } = await supabase.auth.getSession()
     if (!data.session) return
@@ -39,7 +56,6 @@ export function TabWebView({ path, webViewRef, onBackToHome, onLogout }: TabWebV
     `)
   }, [webViewRef, path])
 
-  // Android 뒤로가기 — 탭이 포커스될 때만 등록
   useFocusEffect(
     useCallback(() => {
       const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -65,7 +81,15 @@ export function TabWebView({ path, webViewRef, onBackToHome, onLogout }: TabWebV
     handleWebMessage(webViewRef, event.nativeEvent.data, onLogout)
   }
 
-  const bg = isDark ? '#1C1C1E' : '#ffffff'
+  if (preloadScript === null) {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: bg }]} edges={['top', 'bottom']}>
+        <View style={[styles.loading, { backgroundColor: bg }]}>
+          <ActivityIndicator size="large" color="#4AB8CF" />
+        </View>
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: bg }]} edges={['top', 'bottom']}>
@@ -73,6 +97,7 @@ export function TabWebView({ path, webViewRef, onBackToHome, onLogout }: TabWebV
         ref={webViewRef}
         source={{ uri: `${WEB_URL}${path}` }}
         style={styles.webview}
+        injectedJavaScriptBeforeContentLoaded={preloadScript || undefined}
         onNavigationStateChange={handleNavigationStateChange}
         onMessage={handleMessage}
         onLoadEnd={handleLoadEnd}
