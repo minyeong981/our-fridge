@@ -8,8 +8,8 @@
     "build:web": "pnpm --filter web build",
     "build:api": "pnpm --filter @our-fridge/api build",
     "build:shared": "pnpm --filter @our-fridge/shared build",
-    "typecheck": "pnpm -r typecheck",
-    "lint": "pnpm -r lint",
+    "typecheck": "turbo typecheck",
+    "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
     "db:push": "supabase db execute --file supabase/schema.sql --project-ref exkzgbudslvmxblxwzmb",
@@ -19,6 +19,7 @@
   "devDependencies": {
     "prettier": "^3.3.0",
     "supabase": "^2.26.0",
+    "turbo": "^2.0.0",
     "typescript": "^5.4.5"
   },
   "pnpm": {

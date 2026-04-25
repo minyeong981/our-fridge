@@ -5,6 +5,7 @@ import { Tabs, useRouter } from 'expo-router'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import * as Linking from 'expo-linking'
 import * as Notifications from 'expo-notifications'
+import type { NotifType, RNToWebMessage } from '@our-fridge/shared'
 import { setActiveTab, navigateWebView, dispatchClosePanel, injectToActive, homeWebViewRef, communityWebViewRef, myWebViewRef } from '@/lib/webViewRefs'
 import { useNotificationSetup } from '@/hooks/useNotificationSetup'
 
@@ -87,21 +88,21 @@ export default function TabLayout() {
       const { title, body, data } = notification.request.content
       const category = data?.category as string | undefined
       const url = data?.url as string | undefined
-      const typeMap: Record<string, string> = {
+      const typeMap: Record<string, NotifType> = {
         expiry: 'expiry', notice: 'notice', comment: 'comment', invite: 'invite',
       }
       const msg = JSON.stringify({
         type: 'push_notification',
         notification: {
           id: `push_${Date.now()}`,
-          type: typeMap[category ?? ''] ?? 'item',
+          type: typeMap[category ?? ''] ?? ('item' as NotifType),
           title: title ?? '',
           body: body ?? '',
           createdAt: new Date().toISOString(),
           isRead: false,
           link: url,
         },
-      })
+      } satisfies RNToWebMessage)
       const js = `
         (function(){
           window.dispatchEvent(new MessageEvent('message', { data: ${JSON.stringify(msg)} }));

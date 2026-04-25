@@ -5,18 +5,9 @@ import * as Device from 'expo-device'
 import Constants from 'expo-constants'
 import { Platform } from 'react-native'
 import type { WebView } from 'react-native-webview'
+import type { NotifSettings } from '@our-fridge/shared'
 
-export interface NotifSettings {
-  master: boolean
-  fridgeExpiry: boolean
-  fridgeNotice: boolean
-  fridgeInvite: boolean
-  communityMyPostComment: boolean
-  communityMyComment: boolean
-  communityLikedPost: boolean
-  communityShare: boolean
-  communityReport: boolean
-}
+export type { NotifSettings }
 
 // 전역 설정 참조 — setNotificationHandler는 모듈 레벨에서 한 번만 등록되므로
 // 최신 설정을 읽으려면 ref가 아닌 가변 변수를 사용한다

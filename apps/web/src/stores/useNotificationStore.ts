@@ -1,29 +1,7 @@
 import { create } from 'zustand'
+import type { NotifType, Notification, NotifSettings } from '@our-fridge/shared'
 
-export type NotifType = 'expiry' | 'notice' | 'comment' | 'invite' | 'item'
-
-export interface Notification {
-  id: string
-  type: NotifType
-  title: string
-  body: string
-  createdAt: string
-  isRead: boolean
-  link?: string
-  fridgeName?: string
-}
-
-export interface NotifSettings {
-  master: boolean
-  fridgeExpiry: boolean
-  fridgeNotice: boolean
-  fridgeInvite: boolean
-  communityMyPostComment: boolean
-  communityMyComment: boolean
-  communityLikedPost: boolean
-  communityShare: boolean
-  communityReport: boolean
-}
+export type { NotifType, Notification, NotifSettings }
 
 const DEFAULT_SETTINGS: NotifSettings = {
   master: true,

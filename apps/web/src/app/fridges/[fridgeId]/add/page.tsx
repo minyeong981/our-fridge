@@ -147,7 +147,7 @@ function AddItemContent() {
   }, [addImage])
 
   const handleRNPick = (source: 'camera' | 'gallery') => {
-    ;(window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'pick_image', data: { source } }))
+    ;(window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'pick_image', source }))
   }
 
   const { mutate: save, isPending } = useMutation({

@@ -1,16 +1,16 @@
 import { Appearance, Alert } from 'react-native'
 import * as Linking from 'expo-linking'
+import * as ImagePicker from 'expo-image-picker'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { WebView } from 'react-native-webview'
 import type React from 'react'
+import type { WebToRNMessage } from '@our-fridge/shared'
 import {
   requestPermissionAndGetToken,
   updateNotifHandlerSettings,
-  type NotifSettings,
 } from './useNotificationSetup'
 
 async function pickImage(source: 'camera' | 'gallery'): Promise<string | null> {
-  const ImagePicker = await import('expo-image-picker')
   if (source === 'camera') {
     const { status } = await ImagePicker.requestCameraPermissionsAsync()
     if (status !== 'granted') return null
@@ -51,13 +51,12 @@ export function handleWebMessage(
   onLogout?: () => void,
 ) {
   try {
-    const msg = JSON.parse(data)
+    const msg = JSON.parse(data) as WebToRNMessage
 
     if (msg.type === 'notif_settings') {
-      updateNotifHandlerSettings(msg.data as NotifSettings)
+      updateNotifHandlerSettings(msg.data)
     } else if (msg.type === 'pick_image') {
-      const source = (msg.data?.source ?? msg.source) as 'camera' | 'gallery'
-      pickImage(source).then((base64) => {
+      pickImage(msg.source).then((base64) => {
         if (!base64) return
         injectMessage(webViewRef, { type: 'image_picked', base64 })
       })
